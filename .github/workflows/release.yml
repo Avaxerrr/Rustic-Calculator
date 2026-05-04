@@ -63,7 +63,7 @@ jobs:
           - Persistent window size and position.
 
           ### Download
-          Download `rustic-calculator-$tag-windows-x64.zip`, extract it, and run `rustic-calculator.exe`.
+          Download the rustic-calculator-$tag-windows-x64.zip package, extract it, and run rustic-calculator.exe.
           "@
 
           $notesPath = "dist/release-notes.md"
