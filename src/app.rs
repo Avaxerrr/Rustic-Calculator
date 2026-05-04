@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::MainWindow;
-use crate::calculator::{Calculator, CalculatorSnapshot};
+use crate::calculator::{Calculator, CalculatorSnapshot, HistoryEntry};
 use crate::converter_app::{ConverterApp, ConverterSnapshot};
 use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 
@@ -26,6 +26,18 @@ pub fn run(ui: MainWindow) -> Result<(), slint::PlatformError> {
         }
     });
 
+    let ui_handle = ui.as_weak();
+    ui.on_clear_history_requested({
+        let calculator = Rc::clone(&calculator);
+
+        move || {
+            let snapshot = calculator.borrow_mut().clear_history();
+
+            if let Some(ui) = ui_handle.upgrade() {
+                update_calculator_ui(&ui, snapshot);
+            }
+        }
+    });
     let ui_handle = ui.as_weak();
     ui.on_converter_button_pressed({
         let converter = Rc::clone(&converter);
@@ -118,6 +130,22 @@ fn update_calculator_ui(ui: &MainWindow, snapshot: CalculatorSnapshot) {
     ui.set_active_operator(snapshot.active_operator.into());
     ui.set_clear_label(snapshot.clear_label.into());
     ui.set_display_font_size(snapshot.display_font_size);
+    let (equations, results) = history_models(snapshot.history);
+    ui.set_history_equations(equations);
+    ui.set_history_results(results);
+}
+
+fn history_models(history: Vec<HistoryEntry>) -> (ModelRc<SharedString>, ModelRc<SharedString>) {
+    let equations = history
+        .iter()
+        .map(|entry| SharedString::from(entry.equation.as_str()))
+        .collect::<Vec<_>>();
+    let results = history
+        .iter()
+        .map(|entry| SharedString::from(entry.result.as_str()))
+        .collect::<Vec<_>>();
+
+    (ModelRc::new(VecModel::from(equations)), ModelRc::new(VecModel::from(results)))
 }
 
 fn update_converter_ui(ui: &MainWindow, snapshot: ConverterSnapshot) {

@@ -17,12 +17,19 @@ impl Operator {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct HistoryEntry {
+    pub equation: String,
+    pub result: String,
+}
+
 pub struct CalculatorSnapshot {
     pub display: String,
     pub equation: String,
     pub active_operator: String,
     pub clear_label: String,
     pub display_font_size: i32,
+    pub history: Vec<HistoryEntry>,
 }
 
 #[derive(Default)]
@@ -33,6 +40,7 @@ pub struct Calculator {
     pending_operator: Option<Operator>,
     reset_display_on_next_digit: bool,
     has_error: bool,
+    history: Vec<HistoryEntry>,
 }
 
 impl Calculator {
@@ -56,6 +64,7 @@ impl Calculator {
                 .filter(|_| self.reset_display_on_next_digit)
                 .map(|operator| operator.label().to_owned())
                 .unwrap_or_default(),
+            history: self.history.clone(),
             clear_label: if self.display() == "0"
                 && self.accumulator.is_none()
                 && self.pending_operator.is_none()
@@ -76,7 +85,7 @@ impl Calculator {
             "-" => self.input_operator(Operator::Subtract),
             "x" => self.input_operator(Operator::Multiply),
             "/" => self.input_operator(Operator::Divide),
-            "=" => self.evaluate_pending(),
+            "=" => self.evaluate_pending(true),
             "+/-" => self.toggle_sign(),
             "%" => self.percent(),
             "Back" => self.backspace(),
@@ -84,6 +93,11 @@ impl Calculator {
             _ => {}
         }
 
+        self.snapshot()
+    }
+
+    pub fn clear_history(&mut self) -> CalculatorSnapshot {
+        self.history.clear();
         self.snapshot()
     }
 
@@ -136,7 +150,7 @@ impl Calculator {
         }
 
         if self.pending_operator.is_some() && !self.reset_display_on_next_digit {
-            self.evaluate_pending();
+            self.evaluate_pending(false);
         } else {
             self.accumulator = Some(self.current_value());
         }
@@ -146,7 +160,7 @@ impl Calculator {
         self.reset_display_on_next_digit = true;
     }
 
-    fn evaluate_pending(&mut self) {
+    fn evaluate_pending(&mut self, record_history: bool) {
         if self.has_error {
             return;
         }
@@ -170,12 +184,30 @@ impl Calculator {
             self.accumulator = None;
             self.has_error = true;
             self.reset_display_on_next_digit = true;
+            if record_history {
+                self.history.insert(
+                    0,
+                    HistoryEntry {
+                        equation: self.equation.clone(),
+                        result: self.display.clone(),
+                    },
+                );
+            }
             return;
         };
 
         self.display = format_number(result);
         self.accumulator = Some(result);
         self.reset_display_on_next_digit = true;
+        if record_history {
+            self.history.insert(
+                0,
+                HistoryEntry {
+                    equation: self.equation.clone(),
+                    result: format_display(&self.display),
+                },
+            );
+        }
     }
 
     fn toggle_sign(&mut self) {
@@ -262,7 +294,11 @@ fn format_fixed_number(value: f64) -> String {
         text.pop();
     }
 
-    if text == "-0" { "0".to_owned() } else { text }
+    if text == "-0" {
+        "0".to_owned()
+    } else {
+        text
+    }
 }
 
 fn format_scientific(value: f64) -> String {
@@ -391,6 +427,50 @@ mod tests {
 
         calculator.press("2");
         assert_eq!(calculator.press("=").equation, "1,234,567 + 2 =");
+    }
+
+    #[test]
+    fn records_completed_calculations_in_history() {
+        let mut calculator = Calculator::default();
+
+        calculator.press("2");
+        calculator.press("+");
+        calculator.press("3");
+        let snapshot = calculator.press("=");
+
+        assert_eq!(snapshot.history.len(), 1);
+        assert_eq!(snapshot.history[0].equation, "2 + 3 =");
+        assert_eq!(snapshot.history[0].result, "5");
+    }
+
+    #[test]
+    fn does_not_record_intermediate_operator_chains_in_history() {
+        let mut calculator = Calculator::default();
+
+        calculator.press("2");
+        calculator.press("+");
+        calculator.press("3");
+        calculator.press("+");
+        assert!(calculator.snapshot().history.is_empty());
+
+        calculator.press("4");
+        let snapshot = calculator.press("=");
+        assert_eq!(snapshot.history.len(), 1);
+        assert_eq!(snapshot.history[0].equation, "5 + 4 =");
+    }
+
+    #[test]
+    fn clears_history_without_clearing_current_value() {
+        let mut calculator = Calculator::default();
+
+        calculator.press("8");
+        calculator.press("-");
+        calculator.press("3");
+        calculator.press("=");
+        let snapshot = calculator.clear_history();
+
+        assert_eq!(snapshot.display, "5");
+        assert!(snapshot.history.is_empty());
     }
 
     #[test]

@@ -583,15 +583,128 @@ component ShortcutsView {
     ShortcutRow { x: root.margin; y: 494px; row-width: root.content-width; action: "Delete digit"; keys: "Backspace"; }
     ShortcutRow { x: root.margin; y: 532px; row-width: root.content-width; action: "Clear value"; keys: "Delete / Esc"; }
 }
+component HistoryPanel {
+    in property <[string]> equations;
+    in property <[string]> results;
+    callback clear-history-requested();
+
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+        background: #202020;
+        border-width: 1px;
+        border-color: #303030;
+
+        Text {
+            x: 20px;
+            y: 18px;
+            width: parent.width - 40px;
+            height: 30px;
+            text: "History";
+            color: #ffffff;
+            font-size: 18px;
+            font-family: "Inter";
+            font-weight: 700;
+            vertical-alignment: center;
+        }
+
+        if root.equations.length > 0: Rectangle {
+            x: 20px;
+            y: 54px;
+            width: 58px;
+            height: 30px;
+            border-radius: 4px;
+            background: clear-touch.pressed ? #3b3b3b : clear-touch.has-hover ? #303030 : #252525;
+
+            clear-touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.clear-history-requested(); } }
+
+            Text {
+                width: parent.width;
+                height: parent.height;
+                text: "Clear";
+                color: #ffffff;
+                font-size: 12px;
+                font-family: "Inter";
+                font-weight: 700;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+        }
+
+        if root.equations.length == 0: Text {
+            x: 20px;
+            y: 62px;
+            width: parent.width - 40px;
+            height: 32px;
+            text: "There's no history yet.";
+            color: #d8d8d8;
+            font-size: 14px;
+            font-family: "Inter";
+            font-weight: 500;
+            vertical-alignment: center;
+        }
+
+        Flickable {
+            x: 12px;
+            y: 94px;
+            width: parent.width - 24px;
+            height: parent.height - 106px;
+            viewport-height: root.equations.length * 74px;
+            interactive: root.equations.length * 74px > self.height;
+
+            for equation[index] in root.equations : Rectangle {
+                y: index * 74px;
+                width: parent.width;
+                height: 68px;
+                border-radius: 4px;
+                background: item-touch.has-hover ? #252525 : #202020;
+
+                item-touch := TouchArea { width: parent.width; height: parent.height; }
+
+                Text {
+                    x: 12px;
+                    y: 8px;
+                    width: parent.width - 24px;
+                    height: 22px;
+                    text: equation;
+                    color: #a6a6a6;
+                    font-size: 12px;
+                    font-family: "Inter";
+                    horizontal-alignment: left;
+                    vertical-alignment: center;
+                    overflow: elide;
+                }
+
+                Text {
+                    x: 12px;
+                    y: 30px;
+                    width: parent.width - 24px;
+                    height: 30px;
+                    text: index < root.results.length ? root.results[index] : "";
+                    color: #ffffff;
+                    font-size: 24px;
+                    font-family: "Inter";
+                    font-weight: 500;
+                    horizontal-alignment: left;
+                    vertical-alignment: center;
+                    overflow: elide;
+                }
+            }
+        }
+    }
+}
 export component MainWindow inherits Window {
     in-out property <string> active-view: "calculator";
     in-out property <bool> sidebar-open: false;
+    in-out property <bool> history-open: false;
 
     in property <string> display-text: "0";
     in property <string> equation-text: "";
     in property <string> active-operator: "";
     in property <string> clear-label: "AC";
     in property <int> display-font-size: 52;
+    in property <[string]> history-equations;
+    in property <[string]> history-results;
 
     in property <string> category-title: "Length";
     in property <string> input-value: "1";
@@ -611,25 +724,37 @@ export component MainWindow inherits Window {
     callback to-unit-selected(string);
     callback swap-units-pressed();
     callback shortcuts-selected();
+    callback clear-history-requested();
 
     title: "Rustic Calculator";
     icon: @image-url("../assets/calculator.png");
-    width: 400px;
+    width: root.compact-width;
     height: 620px;
     background: #202020;
     default-font-family: "Inter";
     forward-focus: keyboard-focus;
 
+    property <length> compact-width: 400px;
+    property <length> history-panel-width: 320px;
     property <length> margin: 8px;
     property <length> display-margin: 18px;
     property <length> toolbar-margin: 16px;
     property <length> gap: 3px;
-    property <length> key-width: (root.width - (root.margin * 2) - (root.gap * 3)) / 4;
-    property <length> memory-width: (root.width - (root.margin * 2) - (root.gap * 5)) / 6;
+    property <length> key-width: (root.compact-width - (root.margin * 2) - (root.gap * 3)) / 4;
+    property <length> memory-width: (root.compact-width - (root.margin * 2) - (root.gap * 5)) / 6;
     property <length> converter-key-width: (root.width - (root.margin * 2) - (root.gap * 2)) / 3;
     property <length> converter-wide-key-width: root.converter-key-width * 2 + root.gap;
     property <length> converter-keypad-y: 352px;
 
+    function toggle-history() {
+        root.history-open = !root.history-open;
+        root.width = root.history-open ? root.compact-width + root.history-panel-width : root.compact-width;
+    }
+
+    function collapse-history() {
+        root.history-open = false;
+        root.width = root.compact-width;
+    }
     function handle-key(event: KeyEvent) -> EventResult {
         if root.active-view == "calculator" {
             if event.text == "0" { root.button-pressed("0"); return accept; }
@@ -687,7 +812,7 @@ export component MainWindow inherits Window {
             Text {
                 x: 56px;
                 y: 8px;
-                width: root.width - 128px;
+                width: root.compact-width - 128px;
                 height: 36px;
                 text: root.active-view == "calculator" ? "Standard" : root.active-view == "converter" ? root.category-title : "Keyboard shortcuts";
                 color: #ffffff;
@@ -698,7 +823,7 @@ export component MainWindow inherits Window {
                 overflow: elide;
             }
 
-            if root.active-view == "calculator": IconButton { x: root.width - root.toolbar-margin - 40px; y: 8px; kind: "history"; clicked => { } }
+            if root.active-view == "calculator": IconButton { x: root.compact-width - root.toolbar-margin - 40px; y: 8px; kind: "history"; clicked => { root.toggle-history(); } }
 
             if root.active-view == "converter": Rectangle {
                 x: root.width - root.toolbar-margin - 64px;
@@ -724,7 +849,7 @@ export component MainWindow inherits Window {
             }
 
             if root.active-view == "calculator": CalculatorView {
-                width: parent.width;
+                width: root.compact-width;
                 height: parent.height;
                 margin: root.margin;
                 display-margin: root.display-margin;
@@ -738,8 +863,17 @@ export component MainWindow inherits Window {
                 display-font-size: root.display-font-size;
                 button-pressed(label) => { root.button-pressed(label); }
             }
+            if root.active-view == "calculator" && root.history-open: HistoryPanel {
+                x: root.compact-width;
+                y: 0px;
+                width: root.history-panel-width;
+                height: parent.height;
+                equations: root.history-equations;
+                results: root.history-results;
+                clear-history-requested => { root.clear-history-requested(); }
+            }
             if root.active-view == "shortcuts": ShortcutsView {
-                width: parent.width;
+                width: root.compact-width;
                 height: parent.height;
                 margin: root.margin;
             }
@@ -775,21 +909,21 @@ export component MainWindow inherits Window {
                 NavButton { x: 10px; y: 48px; label: "Standard"; selected: root.active-view == "calculator"; clicked => { root.standard-selected(); } }
 
                 Text { x: 18px; y: 96px; width: parent.width - 36px; height: 24px; text: "Converter"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
-                NavButton { x: 10px; y: 126px; label: "Volume"; selected: root.active-view == "converter" && root.category-title == "Volume"; clicked => { root.category-selected("Volume"); } }
-                NavButton { x: 10px; y: 158px; label: "Length"; selected: root.active-view == "converter" && root.category-title == "Length"; clicked => { root.category-selected("Length"); } }
-                NavButton { x: 10px; y: 190px; label: "Weight and mass"; selected: root.active-view == "converter" && root.category-title == "Weight and mass"; clicked => { root.category-selected("Weight and mass"); } }
-                NavButton { x: 10px; y: 222px; label: "Temperature"; selected: root.active-view == "converter" && root.category-title == "Temperature"; clicked => { root.category-selected("Temperature"); } }
-                NavButton { x: 10px; y: 254px; label: "Energy"; selected: root.active-view == "converter" && root.category-title == "Energy"; clicked => { root.category-selected("Energy"); } }
-                NavButton { x: 10px; y: 286px; label: "Area"; selected: root.active-view == "converter" && root.category-title == "Area"; clicked => { root.category-selected("Area"); } }
-                NavButton { x: 10px; y: 318px; label: "Speed"; selected: root.active-view == "converter" && root.category-title == "Speed"; clicked => { root.category-selected("Speed"); } }
-                NavButton { x: 10px; y: 350px; label: "Time"; selected: root.active-view == "converter" && root.category-title == "Time"; clicked => { root.category-selected("Time"); } }
-                NavButton { x: 10px; y: 382px; label: "Power"; selected: root.active-view == "converter" && root.category-title == "Power"; clicked => { root.category-selected("Power"); } }
-                NavButton { x: 10px; y: 414px; label: "Data"; selected: root.active-view == "converter" && root.category-title == "Data"; clicked => { root.category-selected("Data"); } }
-                NavButton { x: 10px; y: 446px; label: "Pressure"; selected: root.active-view == "converter" && root.category-title == "Pressure"; clicked => { root.category-selected("Pressure"); } }
-                NavButton { x: 10px; y: 478px; label: "Angle"; selected: root.active-view == "converter" && root.category-title == "Angle"; clicked => { root.category-selected("Angle"); } }
+                NavButton { x: 10px; y: 126px; label: "Volume"; selected: root.active-view == "converter" && root.category-title == "Volume"; clicked => { root.collapse-history(); root.category-selected("Volume"); } }
+                NavButton { x: 10px; y: 158px; label: "Length"; selected: root.active-view == "converter" && root.category-title == "Length"; clicked => { root.collapse-history(); root.category-selected("Length"); } }
+                NavButton { x: 10px; y: 190px; label: "Weight and mass"; selected: root.active-view == "converter" && root.category-title == "Weight and mass"; clicked => { root.collapse-history(); root.category-selected("Weight and mass"); } }
+                NavButton { x: 10px; y: 222px; label: "Temperature"; selected: root.active-view == "converter" && root.category-title == "Temperature"; clicked => { root.collapse-history(); root.category-selected("Temperature"); } }
+                NavButton { x: 10px; y: 254px; label: "Energy"; selected: root.active-view == "converter" && root.category-title == "Energy"; clicked => { root.collapse-history(); root.category-selected("Energy"); } }
+                NavButton { x: 10px; y: 286px; label: "Area"; selected: root.active-view == "converter" && root.category-title == "Area"; clicked => { root.collapse-history(); root.category-selected("Area"); } }
+                NavButton { x: 10px; y: 318px; label: "Speed"; selected: root.active-view == "converter" && root.category-title == "Speed"; clicked => { root.collapse-history(); root.category-selected("Speed"); } }
+                NavButton { x: 10px; y: 350px; label: "Time"; selected: root.active-view == "converter" && root.category-title == "Time"; clicked => { root.collapse-history(); root.category-selected("Time"); } }
+                NavButton { x: 10px; y: 382px; label: "Power"; selected: root.active-view == "converter" && root.category-title == "Power"; clicked => { root.collapse-history(); root.category-selected("Power"); } }
+                NavButton { x: 10px; y: 414px; label: "Data"; selected: root.active-view == "converter" && root.category-title == "Data"; clicked => { root.collapse-history(); root.category-selected("Data"); } }
+                NavButton { x: 10px; y: 446px; label: "Pressure"; selected: root.active-view == "converter" && root.category-title == "Pressure"; clicked => { root.collapse-history(); root.category-selected("Pressure"); } }
+                NavButton { x: 10px; y: 478px; label: "Angle"; selected: root.active-view == "converter" && root.category-title == "Angle"; clicked => { root.collapse-history(); root.category-selected("Angle"); } }
 
                 Text { x: 18px; y: 526px; width: parent.width - 36px; height: 24px; text: "Help"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
-                NavButton { x: 10px; y: 556px; label: "Keyboard shortcuts"; selected: root.active-view == "shortcuts"; clicked => { root.shortcuts-selected(); } }
+                NavButton { x: 10px; y: 556px; label: "Keyboard shortcuts"; selected: root.active-view == "shortcuts"; clicked => { root.collapse-history(); root.shortcuts-selected(); } }
             }
         }
     }
