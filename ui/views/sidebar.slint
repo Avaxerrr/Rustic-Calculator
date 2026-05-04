@@ -19,7 +19,7 @@ export component Sidebar inherits Rectangle {
         viewport-height: 568px;
         interactive: self.viewport-height > self.height;
 
-        NavButton { x: 10px; y: 18px; label: "Standard"; has-icon: true; icon-source: @image-url("../../assets/calculator.png"); selected: root.active-view == "calculator"; clicked => { root.standard-selected(); } }
+        NavButton { x: 10px; y: 18px; label: "Calculator"; has-icon: true; icon-source: @image-url("../../assets/calculator.png"); selected: root.active-view == "calculator"; clicked => { root.standard-selected(); } }
 
         Text { x: 18px; y: 66px; width: parent.width - 36px; height: 24px; text: "Converter"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
         NavButton { x: 10px; y: 94px; label: "Volume"; has-icon: true; icon-source: @image-url("../../assets/icons/volume.svg"); selected: root.active-view == "converter" && root.category-title == "Volume"; clicked => { root.category-selected("Volume"); } }
