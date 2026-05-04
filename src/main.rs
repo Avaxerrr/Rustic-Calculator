@@ -1,5 +1,7 @@
 mod app;
 mod calculator;
+mod converter_app;
+mod features;
 mod native_window;
 
 slint::include_modules!();

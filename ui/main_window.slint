@@ -43,6 +43,25 @@ component IconButton {
     }
 }
 
+component BackspaceGlyph {
+    width: 40px;
+    height: 40px;
+
+    Path {
+        x: (parent.width - 20px) / 2;
+        y: (parent.height - 20px) / 2;
+        width: 20px;
+        height: 20px;
+        commands: "M 20 5 L 8 5 L 3 10 L 8 15 L 20 15 Z M 10 7.5 L 15 12.5 M 15 7.5 L 10 12.5";
+        stroke: #f2f2f2;
+        stroke-width: 2px;
+        stroke-line-cap: square;
+        stroke-line-join: miter;
+        fill: transparent;
+        anti-alias: true;
+    }
+}
+
 component MemoryButton {
     in property <string> label;
     in property <length> button-width;
@@ -119,29 +138,391 @@ component CalcButton {
             height: parent.height;
         }
 
-        if root.label == "Back": Path {
-            x: (parent.width - 20px) / 2;
-            y: 19px;
-            width: 20px;
-            height: 20px;
-            commands: "M 20 5 L 8 5 L 3 10 L 8 15 L 20 15 Z M 10 7.5 L 15 12.5 M 15 7.5 L 10 12.5";
-            stroke: #f2f2f2;
-            stroke-width: 2px;
-            stroke-line-cap: square;
-            stroke-line-join: miter;
-            fill: transparent;
-            anti-alias: true;
+        if root.label == "Back": BackspaceGlyph { width: parent.width; height: parent.height; }
+    }
+}
+
+component ConverterKeyButton {
+    in property <string> label;
+    in property <length> button-width;
+    in property <bool> utility: false;
+    property <bool> has-icon: root.label == "Back";
+    callback clicked();
+
+    width: root.button-width;
+    height: 39px;
+
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+        border-radius: 4px;
+        background: touch.pressed ? #464646 : touch.has-hover ? #3b3b3b : root.utility ? #2b2b2b : #323232;
+
+        touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.clicked(); } }
+
+        if !root.has-icon: Text {
+            width: parent.width;
+            height: parent.height;
+            text: root.label;
+            color: #ffffff;
+            font-size: 18px;
+            font-family: "Inter";
+            font-weight: 500;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+
+        if root.label == "Back": BackspaceGlyph { width: parent.width; height: parent.height; }
+    }
+}
+
+component TextDropdown {
+    in property <[string]> model;
+    in-out property <int> current-index: 0;
+    callback selected(string);
+
+    width: 150px;
+    height: 34px;
+
+    property <string> current-value: root.current-index >= 0 && root.current-index < root.model.length ? root.model[root.current-index] : "";
+    property <int> visible-count: min(8, root.model.length);
+
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+        border-radius: 4px;
+        background: touch.pressed || touch.has-hover ? #2b2b2b : #00000000;
+
+        touch := TouchArea {
+            width: parent.width;
+            height: parent.height;
+            clicked => { popup.show(); }
+        }
+
+        Text {
+            x: 0px;
+            width: root.width - 20px;
+            height: root.height;
+            text: root.current-value;
+            color: touch.pressed || touch.has-hover ? #ffffff : #d8d8d8;
+            font-size: 15px;
+            font-family: "Inter";
+            font-weight: 500;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+
+        Text {
+            x: root.width - 18px;
+            width: 18px;
+            height: root.height;
+            text: "⌄";
+            color: touch.pressed || touch.has-hover ? #ffffff : #a6a6a6;
+            font-size: 16px;
+            font-family: "Inter";
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+    }
+
+    popup := PopupWindow {
+        x: 0px;
+        y: root.height + 2px;
+        width: 240px;
+        height: root.visible-count * 32px + 8px;
+        close-policy: close-on-click-outside;
+
+        Rectangle {
+            width: parent.width;
+            height: parent.height;
+            border-radius: 6px;
+            border-width: 1px;
+            border-color: #3b3b3b;
+            background: #252525;
+
+            Flickable {
+                x: 4px;
+                y: 4px;
+                width: parent.width - 8px;
+                height: parent.height - 8px;
+                viewport-height: root.model.length * 32px;
+                interactive: root.model.length > root.visible-count;
+
+                for value[index] in root.model : Rectangle {
+                    y: index * 32px;
+                    width: parent.width;
+                    height: 32px;
+                    border-radius: 4px;
+                    background: option-touch.has-hover ? #323232 : #00000000;
+
+                    option-touch := TouchArea {
+                        width: parent.width;
+                        height: parent.height;
+                        clicked => {
+                            root.current-index = index;
+                            root.selected(value);
+                            popup.close();
+                        }
+                    }
+
+                    Text {
+                        x: 12px;
+                        width: parent.width - 20px;
+                        height: parent.height;
+                        text: value;
+                        color: index == root.current-index ? #7dd3fc : option-touch.has-hover ? #ffffff : #d8d8d8;
+                        font-size: 13px;
+                        font-family: "Inter";
+                        font-weight: index == root.current-index ? 700 : 500;
+                        vertical-alignment: center;
+                        overflow: elide;
+                    }
+                }
+            }
         }
     }
 }
 
+component NavButton {
+    in property <string> label;
+    in property <bool> selected: false;
+    callback clicked();
+
+    width: 300px;
+    height: 32px;
+
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+        border-radius: 4px;
+        background: root.selected ? #303030 : touch.has-hover ? #2b2b2b : #202020;
+
+        touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.clicked(); } }
+
+        Rectangle {
+            x: 0px;
+            y: 6px;
+            width: 3px;
+            height: 20px;
+            border-radius: 2px;
+            background: root.selected ? #7dd3fc : #00000000;
+        }
+
+        Text {
+            x: 16px;
+            width: parent.width - 24px;
+            height: parent.height;
+            text: root.label;
+            color: root.selected ? #ffffff : #d8d8d8;
+            font-size: 13px;
+            font-family: "Inter";
+            font-weight: root.selected ? 600 : 500;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+    }
+}
+
+component CalculatorView {
+    in property <length> margin;
+    in property <length> display-margin;
+    in property <length> gap;
+    in property <length> key-width;
+    in property <length> memory-width;
+    in property <string> display-text;
+    in property <string> equation-text;
+    in property <string> active-operator;
+    in property <string> clear-label;
+    in property <int> display-font-size;
+    callback button-pressed(string);
+    x: 0px;
+    y: 50px;
+
+    Text {
+        x: root.display-margin;
+        y: 16px;
+        width: root.width - root.display-margin * 2;
+        height: 24px;
+        text: root.equation-text;
+        color: #a6a6a6;
+        font-size: 14px;
+        font-family: "Inter";
+        horizontal-alignment: right;
+        vertical-alignment: center;
+        overflow: elide;
+    }
+
+    Text {
+        x: root.display-margin;
+        y: 46px;
+        width: root.width - root.display-margin * 2;
+        height: 78px;
+        text: root.display-text;
+        color: #ffffff;
+        font-size: root.display-font-size * 1px;
+        font-family: "Inter";
+        font-weight: 500;
+        horizontal-alignment: right;
+        vertical-alignment: center;
+        overflow: elide;
+    }
+
+    MemoryButton { x: root.margin + 0 * (root.memory-width + root.gap); y: 144px; button-width: root.memory-width; label: "MC"; clicked => { } }
+    MemoryButton { x: root.margin + 1 * (root.memory-width + root.gap); y: 144px; button-width: root.memory-width; label: "MR"; clicked => { } }
+    MemoryButton { x: root.margin + 2 * (root.memory-width + root.gap); y: 144px; button-width: root.memory-width; label: "M+"; enabled: true; clicked => { } }
+    MemoryButton { x: root.margin + 3 * (root.memory-width + root.gap); y: 144px; button-width: root.memory-width; label: "M-"; enabled: true; clicked => { } }
+    MemoryButton { x: root.margin + 4 * (root.memory-width + root.gap); y: 144px; button-width: root.memory-width; label: "MS"; enabled: true; clicked => { } }
+    MemoryButton { x: root.margin + 5 * (root.memory-width + root.gap); y: 144px; button-width: root.memory-width; label: "M"; clicked => { } }
+
+    CalcButton { x: root.margin + 0 * (root.key-width + root.gap); y: 199px; button-width: root.key-width; label: "%"; operation: true; clicked => { root.button-pressed("%"); } }
+    CalcButton { x: root.margin + 1 * (root.key-width + root.gap); y: 199px; button-width: root.key-width; label: "CE"; operation: true; clicked => { root.button-pressed("CE"); } }
+    CalcButton { x: root.margin + 2 * (root.key-width + root.gap); y: 199px; button-width: root.key-width; label: root.clear-label; operation: true; clicked => { root.button-pressed(root.clear-label); } }
+    CalcButton { x: root.margin + 3 * (root.key-width + root.gap); y: 199px; button-width: root.key-width; label: "Back"; operation: true; clicked => { root.button-pressed("Back"); } }
+
+    CalcButton { x: root.margin + 0 * (root.key-width + root.gap); y: 260px; button-width: root.key-width; label: "1/x"; operation: true; clicked => { } }
+    CalcButton { x: root.margin + 1 * (root.key-width + root.gap); y: 260px; button-width: root.key-width; label: "x^2"; operation: true; clicked => { } }
+    CalcButton { x: root.margin + 2 * (root.key-width + root.gap); y: 260px; button-width: root.key-width; label: "sqrt"; operation: true; clicked => { } }
+    CalcButton { x: root.margin + 3 * (root.key-width + root.gap); y: 260px; button-width: root.key-width; label: "/"; operation: true; active: root.active-operator == "/"; clicked => { root.button-pressed("/"); } }
+
+    CalcButton { x: root.margin + 0 * (root.key-width + root.gap); y: 321px; button-width: root.key-width; label: "7"; clicked => { root.button-pressed("7"); } }
+    CalcButton { x: root.margin + 1 * (root.key-width + root.gap); y: 321px; button-width: root.key-width; label: "8"; clicked => { root.button-pressed("8"); } }
+    CalcButton { x: root.margin + 2 * (root.key-width + root.gap); y: 321px; button-width: root.key-width; label: "9"; clicked => { root.button-pressed("9"); } }
+    CalcButton { x: root.margin + 3 * (root.key-width + root.gap); y: 321px; button-width: root.key-width; label: "x"; operation: true; active: root.active-operator == "x"; clicked => { root.button-pressed("x"); } }
+
+    CalcButton { x: root.margin + 0 * (root.key-width + root.gap); y: 382px; button-width: root.key-width; label: "4"; clicked => { root.button-pressed("4"); } }
+    CalcButton { x: root.margin + 1 * (root.key-width + root.gap); y: 382px; button-width: root.key-width; label: "5"; clicked => { root.button-pressed("5"); } }
+    CalcButton { x: root.margin + 2 * (root.key-width + root.gap); y: 382px; button-width: root.key-width; label: "6"; clicked => { root.button-pressed("6"); } }
+    CalcButton { x: root.margin + 3 * (root.key-width + root.gap); y: 382px; button-width: root.key-width; label: "-"; operation: true; active: root.active-operator == "-"; clicked => { root.button-pressed("-"); } }
+
+    CalcButton { x: root.margin + 0 * (root.key-width + root.gap); y: 443px; button-width: root.key-width; label: "1"; clicked => { root.button-pressed("1"); } }
+    CalcButton { x: root.margin + 1 * (root.key-width + root.gap); y: 443px; button-width: root.key-width; label: "2"; clicked => { root.button-pressed("2"); } }
+    CalcButton { x: root.margin + 2 * (root.key-width + root.gap); y: 443px; button-width: root.key-width; label: "3"; clicked => { root.button-pressed("3"); } }
+    CalcButton { x: root.margin + 3 * (root.key-width + root.gap); y: 443px; button-width: root.key-width; label: "+"; operation: true; active: root.active-operator == "+"; clicked => { root.button-pressed("+"); } }
+
+    CalcButton { x: root.margin + 0 * (root.key-width + root.gap); y: 504px; button-width: root.key-width; label: "+/-"; clicked => { root.button-pressed("+/-"); } }
+    CalcButton { x: root.margin + 1 * (root.key-width + root.gap); y: 504px; button-width: root.key-width; label: "0"; clicked => { root.button-pressed("0"); } }
+    CalcButton { x: root.margin + 2 * (root.key-width + root.gap); y: 504px; button-width: root.key-width; label: "."; clicked => { root.button-pressed("."); } }
+    CalcButton { x: root.margin + 3 * (root.key-width + root.gap); y: 504px; button-width: root.key-width; label: "="; equal: true; clicked => { root.button-pressed("="); } }
+}
+
+
+component ConverterView {
+    in property <length> margin;
+    in property <length> gap;
+    in property <length> converter-key-width;
+    in property <length> converter-wide-key-width;
+    in property <length> converter-keypad-y;
+    in property <string> input-value;
+    in property <string> output-value;
+    in-out property <int> from-unit-index;
+    in-out property <int> to-unit-index;
+    in property <[string]> unit-options;
+    in property <string> relation-text;
+    callback converter-button-pressed(string);
+    callback from-unit-selected(string);
+    callback to-unit-selected(string);
+    x: 0px;
+    y: 50px;
+
+    Rectangle {
+        x: root.margin;
+        y: 8px;
+        width: root.width - root.margin * 2;
+        height: 106px;
+        border-radius: 6px;
+        border-width: 1px;
+        border-color: #7dd3fc;
+        background: #252525;
+
+        Text { x: 18px; y: 12px; width: parent.width - 36px; height: 42px; text: root.input-value; color: #ffffff; font-size: 32px; font-family: "Inter"; font-weight: 500; horizontal-alignment: left; vertical-alignment: center; overflow: elide; }
+        TextDropdown {
+            x: 18px;
+            y: 62px;
+            width: 156px;
+            height: 34px;
+            model: root.unit-options;
+            current-index <=> root.from-unit-index;
+            selected(value) => { root.from-unit-selected(value); }
+        }
+    }
+
+    Rectangle {
+        x: root.margin;
+        y: 124px;
+        width: root.width - root.margin * 2;
+        height: 106px;
+        border-radius: 6px;
+        border-width: 1px;
+        border-color: #3b3b3b;
+        background: #202020;
+
+        Text { x: 18px; y: 12px; width: parent.width - 36px; height: 42px; text: root.output-value; color: #ffffff; font-size: 32px; font-family: "Inter"; font-weight: 500; horizontal-alignment: left; vertical-alignment: center; overflow: elide; }
+        TextDropdown {
+            x: 18px;
+            y: 62px;
+            width: 156px;
+            height: 34px;
+            model: root.unit-options;
+            current-index <=> root.to-unit-index;
+            selected(value) => { root.to-unit-selected(value); }
+        }
+    }
+
+    Rectangle {
+        x: root.margin;
+        y: 244px;
+        width: root.width - root.margin * 2;
+        height: 40px;
+        border-radius: 6px;
+        background: #252525;
+
+        Text { x: 14px; width: 94px; height: parent.height; text: "Quick relation"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; vertical-alignment: center; }
+        Text { x: 112px; width: parent.width - 126px; height: parent.height; text: root.relation-text; color: #ffffff; font-size: 12px; font-family: "Inter"; font-weight: 600; horizontal-alignment: right; vertical-alignment: center; overflow: elide; }
+    }
+
+    ConverterKeyButton { x: root.margin; y: root.converter-keypad-y - 50px; button-width: root.converter-wide-key-width; label: "CE"; utility: true; clicked => { root.converter-button-pressed("CE"); } }
+    ConverterKeyButton { x: root.margin + root.converter-wide-key-width + root.gap; y: root.converter-keypad-y - 50px; button-width: root.converter-key-width; label: "Back"; utility: true; clicked => { root.converter-button-pressed("Back"); } }
+    ConverterKeyButton { x: root.margin + 0 * (root.converter-key-width + root.gap); y: root.converter-keypad-y - 7px; button-width: root.converter-key-width; label: "7"; clicked => { root.converter-button-pressed("7"); } }
+    ConverterKeyButton { x: root.margin + 1 * (root.converter-key-width + root.gap); y: root.converter-keypad-y - 7px; button-width: root.converter-key-width; label: "8"; clicked => { root.converter-button-pressed("8"); } }
+    ConverterKeyButton { x: root.margin + 2 * (root.converter-key-width + root.gap); y: root.converter-keypad-y - 7px; button-width: root.converter-key-width; label: "9"; clicked => { root.converter-button-pressed("9"); } }
+    ConverterKeyButton { x: root.margin + 0 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 36px; button-width: root.converter-key-width; label: "4"; clicked => { root.converter-button-pressed("4"); } }
+    ConverterKeyButton { x: root.margin + 1 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 36px; button-width: root.converter-key-width; label: "5"; clicked => { root.converter-button-pressed("5"); } }
+    ConverterKeyButton { x: root.margin + 2 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 36px; button-width: root.converter-key-width; label: "6"; clicked => { root.converter-button-pressed("6"); } }
+    ConverterKeyButton { x: root.margin + 0 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 79px; button-width: root.converter-key-width; label: "1"; clicked => { root.converter-button-pressed("1"); } }
+    ConverterKeyButton { x: root.margin + 1 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 79px; button-width: root.converter-key-width; label: "2"; clicked => { root.converter-button-pressed("2"); } }
+    ConverterKeyButton { x: root.margin + 2 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 79px; button-width: root.converter-key-width; label: "3"; clicked => { root.converter-button-pressed("3"); } }
+    ConverterKeyButton { x: root.margin + 0 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 122px; button-width: root.converter-key-width; label: "+/-"; clicked => { root.converter-button-pressed("+/-"); } }
+    ConverterKeyButton { x: root.margin + 1 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 122px; button-width: root.converter-key-width; label: "0"; clicked => { root.converter-button-pressed("0"); } }
+    ConverterKeyButton { x: root.margin + 2 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 122px; button-width: root.converter-key-width; label: "."; clicked => { root.converter-button-pressed("."); } }
+}
+
 export component MainWindow inherits Window {
+    in-out property <string> active-view: "calculator";
+    in-out property <bool> sidebar-open: false;
+
     in property <string> display-text: "0";
     in property <string> equation-text: "";
     in property <string> active-operator: "";
     in property <string> clear-label: "AC";
-    callback button-pressed(string);
     in property <int> display-font-size: 52;
+
+    in property <string> category-title: "Length";
+    in property <string> input-value: "1";
+    in property <string> output-value: "3.2808399";
+    in property <string> from-unit: "Meter";
+    in property <string> to-unit: "Foot";
+    in-out property <int> from-unit-index: 0;
+    in-out property <int> to-unit-index: 0;
+    in property <[string]> unit-options;
+    in property <string> relation-text: "1 Meter = 3.2808399 Foot";
+
+    callback button-pressed(string);
+    callback converter-button-pressed(string);
+    callback category-selected(string);
+    callback standard-selected();
+    callback from-unit-selected(string);
+    callback to-unit-selected(string);
+    callback swap-units-pressed();
 
     title: "Rustic Calculator";
     width: 400px;
@@ -156,28 +537,47 @@ export component MainWindow inherits Window {
     property <length> gap: 3px;
     property <length> key-width: (root.width - (root.margin * 2) - (root.gap * 3)) / 4;
     property <length> memory-width: (root.width - (root.margin * 2) - (root.gap * 5)) / 6;
+    property <length> converter-key-width: (root.width - (root.margin * 2) - (root.gap * 2)) / 3;
+    property <length> converter-wide-key-width: root.converter-key-width * 2 + root.gap;
+    property <length> converter-keypad-y: 386px;
 
     function handle-key(event: KeyEvent) -> EventResult {
-        if event.text == "0" { root.button-pressed("0"); return accept; }
-        if event.text == "1" { root.button-pressed("1"); return accept; }
-        if event.text == "2" { root.button-pressed("2"); return accept; }
-        if event.text == "3" { root.button-pressed("3"); return accept; }
-        if event.text == "4" { root.button-pressed("4"); return accept; }
-        if event.text == "5" { root.button-pressed("5"); return accept; }
-        if event.text == "6" { root.button-pressed("6"); return accept; }
-        if event.text == "7" { root.button-pressed("7"); return accept; }
-        if event.text == "8" { root.button-pressed("8"); return accept; }
-        if event.text == "9" { root.button-pressed("9"); return accept; }
-        if event.text == "." { root.button-pressed("."); return accept; }
-        if event.text == "+" { root.button-pressed("+"); return accept; }
-        if event.text == "-" { root.button-pressed("-"); return accept; }
-        if event.text == "*" { root.button-pressed("x"); return accept; }
-        if event.text == "/" { root.button-pressed("/"); return accept; }
-        if event.text == "%" { root.button-pressed("%"); return accept; }
-        if event.text == "=" || event.text == Key.Return { root.button-pressed("="); return accept; }
-        if event.text == Key.Backspace { root.button-pressed("Back"); return accept; }
-        if event.text == Key.Delete { root.button-pressed("CE"); return accept; }
-        if event.text == Key.Escape { root.button-pressed(root.clear-label); return accept; }
+        if root.active-view == "calculator" {
+            if event.text == "0" { root.button-pressed("0"); return accept; }
+            if event.text == "1" { root.button-pressed("1"); return accept; }
+            if event.text == "2" { root.button-pressed("2"); return accept; }
+            if event.text == "3" { root.button-pressed("3"); return accept; }
+            if event.text == "4" { root.button-pressed("4"); return accept; }
+            if event.text == "5" { root.button-pressed("5"); return accept; }
+            if event.text == "6" { root.button-pressed("6"); return accept; }
+            if event.text == "7" { root.button-pressed("7"); return accept; }
+            if event.text == "8" { root.button-pressed("8"); return accept; }
+            if event.text == "9" { root.button-pressed("9"); return accept; }
+            if event.text == "." { root.button-pressed("."); return accept; }
+            if event.text == "+" { root.button-pressed("+"); return accept; }
+            if event.text == "-" { root.button-pressed("-"); return accept; }
+            if event.text == "*" { root.button-pressed("x"); return accept; }
+            if event.text == "/" { root.button-pressed("/"); return accept; }
+            if event.text == "%" { root.button-pressed("%"); return accept; }
+            if event.text == "=" || event.text == Key.Return { root.button-pressed("="); return accept; }
+            if event.text == Key.Backspace { root.button-pressed("Back"); return accept; }
+            if event.text == Key.Delete { root.button-pressed("CE"); return accept; }
+            if event.text == Key.Escape { root.button-pressed(root.clear-label); return accept; }
+        } else {
+            if event.text == "0" { root.converter-button-pressed("0"); return accept; }
+            if event.text == "1" { root.converter-button-pressed("1"); return accept; }
+            if event.text == "2" { root.converter-button-pressed("2"); return accept; }
+            if event.text == "3" { root.converter-button-pressed("3"); return accept; }
+            if event.text == "4" { root.converter-button-pressed("4"); return accept; }
+            if event.text == "5" { root.converter-button-pressed("5"); return accept; }
+            if event.text == "6" { root.converter-button-pressed("6"); return accept; }
+            if event.text == "7" { root.converter-button-pressed("7"); return accept; }
+            if event.text == "8" { root.converter-button-pressed("8"); return accept; }
+            if event.text == "9" { root.converter-button-pressed("9"); return accept; }
+            if event.text == "." { root.converter-button-pressed("."); return accept; }
+            if event.text == Key.Backspace { root.converter-button-pressed("Back"); return accept; }
+            if event.text == Key.Delete || event.text == Key.Escape { root.converter-button-pressed("CE"); return accept; }
+        }
         return reject;
     }
 
@@ -193,89 +593,107 @@ export component MainWindow inherits Window {
             height: parent.height;
             background: #202020;
 
-        IconButton { x: root.toolbar-margin; y: 8px; kind: "menu"; clicked => { } }
+            IconButton { x: root.toolbar-margin; y: 8px; kind: "menu"; clicked => { root.sidebar-open = !root.sidebar-open; } }
 
-        Text {
-            x: 56px;
-            y: 8px;
-            width: root.width - 120px;
-            height: 36px;
-            text: "Standard";
-            color: #ffffff;
-            font-size: 19px;
-            font-family: "Inter";
-            font-weight: 600;
-            vertical-alignment: center;
-        }
+            Text {
+                x: 56px;
+                y: 8px;
+                width: root.width - 128px;
+                height: 36px;
+                text: root.active-view == "calculator" ? "Standard" : root.category-title;
+                color: #ffffff;
+                font-size: 19px;
+                font-family: "Inter";
+                font-weight: 600;
+                vertical-alignment: center;
+                overflow: elide;
+            }
 
-        IconButton { x: root.width - root.toolbar-margin - 40px; y: 8px; kind: "history"; clicked => { } }
+            if root.active-view == "calculator": IconButton { x: root.width - root.toolbar-margin - 40px; y: 8px; kind: "history"; clicked => { } }
 
-        Text {
-            x: root.display-margin;
-            y: 66px;
-            width: root.width - root.display-margin * 2;
-            height: 24px;
-            text: root.equation-text;
-            color: #a6a6a6;
-            font-size: 14px;
-            font-family: "Inter";
-            horizontal-alignment: right;
-            vertical-alignment: center;
-            overflow: elide;
-        }
+            if root.active-view == "converter": Rectangle {
+                x: root.width - root.toolbar-margin - 64px;
+                y: 11px;
+                width: 64px;
+                height: 30px;
+                border-radius: 4px;
+                background: swap-touch.pressed ? #5b5b5b : swap-touch.has-hover ? #4a4a4a : #323232;
 
-        Text {
-            x: root.display-margin;
-            y: 96px;
-            width: root.width - root.display-margin * 2;
-            height: 78px;
-            text: root.display-text;
-            color: #ffffff;
-            font-size: root.display-font-size * 1px;
-            font-family: "Inter";
-            font-weight: 500;
-            horizontal-alignment: right;
-            vertical-alignment: center;
-            overflow: elide;
-        }
+                swap-touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.swap-units-pressed(); } }
 
-        MemoryButton { x: root.margin + 0 * (root.memory-width + root.gap); y: 194px; button-width: root.memory-width; label: "MC"; clicked => { } }
-        MemoryButton { x: root.margin + 1 * (root.memory-width + root.gap); y: 194px; button-width: root.memory-width; label: "MR"; clicked => { } }
-        MemoryButton { x: root.margin + 2 * (root.memory-width + root.gap); y: 194px; button-width: root.memory-width; label: "M+"; enabled: true; clicked => { } }
-        MemoryButton { x: root.margin + 3 * (root.memory-width + root.gap); y: 194px; button-width: root.memory-width; label: "M-"; enabled: true; clicked => { } }
-        MemoryButton { x: root.margin + 4 * (root.memory-width + root.gap); y: 194px; button-width: root.memory-width; label: "MS"; enabled: true; clicked => { } }
-        MemoryButton { x: root.margin + 5 * (root.memory-width + root.gap); y: 194px; button-width: root.memory-width; label: "M"; clicked => { } }
+                Text {
+                    width: parent.width;
+                    height: parent.height;
+                    text: "Swap";
+                    color: #ffffff;
+                    font-size: 12px;
+                    font-family: "Inter";
+                    font-weight: 700;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
 
-        CalcButton { x: root.margin + 0 * (root.key-width + root.gap); y: 249px; button-width: root.key-width; label: "%"; operation: true; clicked => { root.button-pressed("%"); } }
-        CalcButton { x: root.margin + 1 * (root.key-width + root.gap); y: 249px; button-width: root.key-width; label: "CE"; operation: true; clicked => { root.button-pressed("CE"); } }
-        CalcButton { x: root.margin + 2 * (root.key-width + root.gap); y: 249px; button-width: root.key-width; label: root.clear-label; operation: true; clicked => { root.button-pressed(root.clear-label); } }
-        CalcButton { x: root.margin + 3 * (root.key-width + root.gap); y: 249px; button-width: root.key-width; label: "Back"; operation: true; clicked => { root.button-pressed("Back"); } }
+            if root.active-view == "calculator": CalculatorView {
+                width: parent.width;
+                height: parent.height;
+                margin: root.margin;
+                display-margin: root.display-margin;
+                gap: root.gap;
+                key-width: root.key-width;
+                memory-width: root.memory-width;
+                display-text: root.display-text;
+                equation-text: root.equation-text;
+                active-operator: root.active-operator;
+                clear-label: root.clear-label;
+                display-font-size: root.display-font-size;
+                button-pressed(label) => { root.button-pressed(label); }
+            }
+            if root.active-view == "converter": ConverterView {
+                width: parent.width;
+                height: parent.height;
+                margin: root.margin;
+                gap: root.gap;
+                converter-key-width: root.converter-key-width;
+                converter-wide-key-width: root.converter-wide-key-width;
+                converter-keypad-y: root.converter-keypad-y;
+                input-value: root.input-value;
+                output-value: root.output-value;
+                from-unit-index <=> root.from-unit-index;
+                to-unit-index <=> root.to-unit-index;
+                unit-options: root.unit-options;
+                relation-text: root.relation-text;
+                converter-button-pressed(label) => { root.converter-button-pressed(label); }
+                from-unit-selected(value) => { root.from-unit-selected(value); }
+                to-unit-selected(value) => { root.to-unit-selected(value); }
+            }
 
-        CalcButton { x: root.margin + 0 * (root.key-width + root.gap); y: 310px; button-width: root.key-width; label: "1/x"; operation: true; clicked => { } }
-        CalcButton { x: root.margin + 1 * (root.key-width + root.gap); y: 310px; button-width: root.key-width; label: "x^2"; operation: true; clicked => { } }
-        CalcButton { x: root.margin + 2 * (root.key-width + root.gap); y: 310px; button-width: root.key-width; label: "sqrt"; operation: true; clicked => { } }
-        CalcButton { x: root.margin + 3 * (root.key-width + root.gap); y: 310px; button-width: root.key-width; label: "/"; operation: true; active: root.active-operator == "/"; clicked => { root.button-pressed("/"); } }
+            if root.sidebar-open: Rectangle {
+                x: 0px;
+                y: 0px;
+                width: root.width < 324px ? root.width : 324px;
+                height: root.height;
+                background: #202020;
+                border-width: 1px;
+                border-color: #303030;
 
-        CalcButton { x: root.margin + 0 * (root.key-width + root.gap); y: 371px; button-width: root.key-width; label: "7"; clicked => { root.button-pressed("7"); } }
-        CalcButton { x: root.margin + 1 * (root.key-width + root.gap); y: 371px; button-width: root.key-width; label: "8"; clicked => { root.button-pressed("8"); } }
-        CalcButton { x: root.margin + 2 * (root.key-width + root.gap); y: 371px; button-width: root.key-width; label: "9"; clicked => { root.button-pressed("9"); } }
-        CalcButton { x: root.margin + 3 * (root.key-width + root.gap); y: 371px; button-width: root.key-width; label: "x"; operation: true; active: root.active-operator == "x"; clicked => { root.button-pressed("x"); } }
+                Text { x: 18px; y: 18px; width: parent.width - 36px; height: 24px; text: "Calculator"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
+                NavButton { x: 10px; y: 48px; label: "Standard"; selected: root.active-view == "calculator"; clicked => { root.standard-selected(); } }
 
-        CalcButton { x: root.margin + 0 * (root.key-width + root.gap); y: 432px; button-width: root.key-width; label: "4"; clicked => { root.button-pressed("4"); } }
-        CalcButton { x: root.margin + 1 * (root.key-width + root.gap); y: 432px; button-width: root.key-width; label: "5"; clicked => { root.button-pressed("5"); } }
-        CalcButton { x: root.margin + 2 * (root.key-width + root.gap); y: 432px; button-width: root.key-width; label: "6"; clicked => { root.button-pressed("6"); } }
-        CalcButton { x: root.margin + 3 * (root.key-width + root.gap); y: 432px; button-width: root.key-width; label: "-"; operation: true; active: root.active-operator == "-"; clicked => { root.button-pressed("-"); } }
-
-        CalcButton { x: root.margin + 0 * (root.key-width + root.gap); y: 493px; button-width: root.key-width; label: "1"; clicked => { root.button-pressed("1"); } }
-        CalcButton { x: root.margin + 1 * (root.key-width + root.gap); y: 493px; button-width: root.key-width; label: "2"; clicked => { root.button-pressed("2"); } }
-        CalcButton { x: root.margin + 2 * (root.key-width + root.gap); y: 493px; button-width: root.key-width; label: "3"; clicked => { root.button-pressed("3"); } }
-        CalcButton { x: root.margin + 3 * (root.key-width + root.gap); y: 493px; button-width: root.key-width; label: "+"; operation: true; active: root.active-operator == "+"; clicked => { root.button-pressed("+"); } }
-
-        CalcButton { x: root.margin + 0 * (root.key-width + root.gap); y: 554px; button-width: root.key-width; label: "+/-"; clicked => { root.button-pressed("+/-"); } }
-        CalcButton { x: root.margin + 1 * (root.key-width + root.gap); y: 554px; button-width: root.key-width; label: "0"; clicked => { root.button-pressed("0"); } }
-        CalcButton { x: root.margin + 2 * (root.key-width + root.gap); y: 554px; button-width: root.key-width; label: "."; clicked => { root.button-pressed("."); } }
-        CalcButton { x: root.margin + 3 * (root.key-width + root.gap); y: 554px; button-width: root.key-width; label: "="; equal: true; clicked => { root.button-pressed("="); } }
-
+                Text { x: 18px; y: 96px; width: parent.width - 36px; height: 24px; text: "Converter"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
+                NavButton { x: 10px; y: 126px; label: "Volume"; selected: root.active-view == "converter" && root.category-title == "Volume"; clicked => { root.category-selected("Volume"); } }
+                NavButton { x: 10px; y: 158px; label: "Length"; selected: root.active-view == "converter" && root.category-title == "Length"; clicked => { root.category-selected("Length"); } }
+                NavButton { x: 10px; y: 190px; label: "Weight and mass"; selected: root.active-view == "converter" && root.category-title == "Weight and mass"; clicked => { root.category-selected("Weight and mass"); } }
+                NavButton { x: 10px; y: 222px; label: "Temperature"; selected: root.active-view == "converter" && root.category-title == "Temperature"; clicked => { root.category-selected("Temperature"); } }
+                NavButton { x: 10px; y: 254px; label: "Energy"; selected: root.active-view == "converter" && root.category-title == "Energy"; clicked => { root.category-selected("Energy"); } }
+                NavButton { x: 10px; y: 286px; label: "Area"; selected: root.active-view == "converter" && root.category-title == "Area"; clicked => { root.category-selected("Area"); } }
+                NavButton { x: 10px; y: 318px; label: "Speed"; selected: root.active-view == "converter" && root.category-title == "Speed"; clicked => { root.category-selected("Speed"); } }
+                NavButton { x: 10px; y: 350px; label: "Time"; selected: root.active-view == "converter" && root.category-title == "Time"; clicked => { root.category-selected("Time"); } }
+                NavButton { x: 10px; y: 382px; label: "Power"; selected: root.active-view == "converter" && root.category-title == "Power"; clicked => { root.category-selected("Power"); } }
+                NavButton { x: 10px; y: 414px; label: "Data"; selected: root.active-view == "converter" && root.category-title == "Data"; clicked => { root.category-selected("Data"); } }
+                NavButton { x: 10px; y: 446px; label: "Pressure"; selected: root.active-view == "converter" && root.category-title == "Pressure"; clicked => { root.category-selected("Pressure"); } }
+                NavButton { x: 10px; y: 478px; label: "Angle"; selected: root.active-view == "converter" && root.category-title == "Angle"; clicked => { root.category-selected("Angle"); } }
+            }
         }
     }
 
