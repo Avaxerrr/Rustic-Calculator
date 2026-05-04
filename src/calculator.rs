@@ -103,7 +103,7 @@ impl Calculator {
             self.reset_display_on_next_digit = false;
         }
 
-        if significant_digit_count(&self.display) >= 16 {
+        if significant_digit_count(&self.display) >= 18 {
             return;
         }
 
@@ -240,7 +240,7 @@ fn format_number(value: f64) -> String {
 
     let fixed = format_fixed_number(value);
 
-    if format_display(&fixed).chars().count() <= 20 {
+    if format_display(&fixed).chars().count() <= 23 {
         fixed
     } else {
         format_scientific(value)
@@ -414,14 +414,14 @@ mod tests {
             calculator.press(&digit.to_string());
         }
 
-        assert_eq!(calculator.display(), "1234567890123456");
+        assert_eq!(calculator.display(), "123456789012345678");
     }
 
     #[test]
     fn formats_huge_results_scientifically() {
         let mut calculator = Calculator::default();
 
-        for digit in "9999999999999999".chars() {
+        for digit in "999999999999999999".chars() {
             calculator.press(&digit.to_string());
         }
         calculator.press("x");
