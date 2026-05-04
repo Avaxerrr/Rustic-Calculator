@@ -1,16 +1,15 @@
-﻿# Rustic Calculator
+# Rustic Calculator
 
-A small Rust desktop calculator built with Slint.
+A Rust desktop calculator and unit converter built with Slint.
 
-## Structure
+![Rustic Calculator screenshot](docs/screenshots/rustic-calculator.png)
 
-- `ui/main_window.slint` contains the visual layout and button callbacks.
-- `src/calculator.rs` contains calculator state and arithmetic rules.
-- `src/app.rs` connects the Slint UI to the calculator state.
-- `src/main.rs` starts the application.
-- `build.rs` compiles the Slint UI during `cargo build`.
+## Features
 
-This is closer to a small MVU/MVVM-style split than classic MVC: the Slint file is the view, `Calculator` is the model/domain state, and `app.rs` is the thin binding layer between them.
+- Standard calculator with keyboard input and history.
+- Unit converters for volume, length, weight and mass, temperature, energy, area, speed, time, power, data, pressure, and angle.
+- Dark Windows-style desktop UI.
+- Persistent window size and position.
 
 ## Run
 
@@ -18,9 +17,40 @@ This is closer to a small MVU/MVVM-style split than classic MVC: the Slint file 
 cargo run
 ```
 
+## Production Build
+
+```powershell
+cargo build --release
+```
+
+The optimized Windows executable is generated at:
+
+```text
+target/release/rustic-calculator.exe
+```
+
 ## Check
 
 ```powershell
 cargo test
-cargo clippy
+cargo clippy --all-targets -- -D warnings
 ```
+
+## Structure
+
+- `ui/main_window.slint` is the root window and view composition.
+- `ui/components/` contains reusable Slint UI controls.
+- `ui/views/` contains app screens and panels.
+- `src/calculator.rs` contains calculator state and arithmetic rules.
+- `src/converter_app.rs` contains converter UI state.
+- `src/features/converters.rs` contains conversion data and formulas.
+- `src/app.rs` connects the Slint UI to Rust state.
+
+## License
+
+Rustic Calculator is licensed under the MIT License. See `LICENSE`.
+
+## Attribution
+
+- Calculator app icon by Apien from Flaticon.
+- Inter font licensed under the SIL Open Font License.
