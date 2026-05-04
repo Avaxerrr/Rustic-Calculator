@@ -1,0 +1,42 @@
+export component IconButton {
+    in property <string> kind;
+    callback clicked();
+
+    width: 40px;
+    height: 36px;
+
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+        border-radius: 4px;
+        background: #00000000;
+
+        touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.clicked(); } }
+
+        if root.kind == "menu": Path {
+            x: 8px;
+            y: 8px;
+            width: 22px;
+            height: 16px;
+            commands: "M 0 1 L 22 1 M 0 8 L 22 8 M 0 15 L 22 15";
+            stroke: touch.pressed || touch.has-hover ? #ffffff : #d8d8d8;
+            stroke-width: 2px;
+            stroke-line-cap: square;
+            anti-alias: true;
+        }
+
+        if root.kind == "history": Path {
+            x: 8px;
+            y: 6px;
+            width: 24px;
+            height: 24px;
+            commands: "M 22 12 A 10 10 0 1 1 21.99 11.5 M 12 7 L 12 12 L 16.5 15";
+            stroke: touch.pressed || touch.has-hover ? #ffffff : #d8d8d8;
+            stroke-width: 2px;
+            stroke-line-cap: square;
+            stroke-line-join: miter;
+            fill: transparent;
+            anti-alias: true;
+        }
+    }
+}

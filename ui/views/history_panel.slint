@@ -1,0 +1,110 @@
+export component HistoryPanel {
+    in property <[string]> equations;
+    in property <[string]> results;
+    callback clear-history-requested();
+
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+        background: #202020;
+
+        Rectangle { x: 0px; width: 1px; height: parent.height; background: #303030; }
+
+        Text {
+            x: 20px;
+            y: 18px;
+            width: parent.width - 40px;
+            height: 30px;
+            text: "History";
+            color: #ffffff;
+            font-size: 18px;
+            font-family: "Inter";
+            font-weight: 700;
+            vertical-alignment: center;
+        }
+
+        if root.equations.length > 0: Rectangle {
+            x: 20px;
+            y: 54px;
+            width: 58px;
+            height: 30px;
+            border-radius: 4px;
+            background: clear-touch.pressed ? #3b3b3b : clear-touch.has-hover ? #303030 : #252525;
+
+            clear-touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.clear-history-requested(); } }
+
+            Text {
+                width: parent.width;
+                height: parent.height;
+                text: "Clear";
+                color: #ffffff;
+                font-size: 12px;
+                font-family: "Inter";
+                font-weight: 700;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+        }
+
+        if root.equations.length == 0: Text {
+            x: 20px;
+            y: 62px;
+            width: parent.width - 40px;
+            height: 32px;
+            text: "There's no history yet.";
+            color: #d8d8d8;
+            font-size: 14px;
+            font-family: "Inter";
+            font-weight: 500;
+            vertical-alignment: center;
+        }
+
+        Flickable {
+            x: 12px;
+            y: 94px;
+            width: parent.width - 24px;
+            height: parent.height - 106px;
+            viewport-height: root.equations.length * 74px;
+            interactive: root.equations.length * 74px > self.height;
+
+            for equation[index] in root.equations : Rectangle {
+                y: index * 74px;
+                width: parent.width;
+                height: 68px;
+                border-radius: 4px;
+                background: item-touch.has-hover ? #252525 : #202020;
+
+                item-touch := TouchArea { width: parent.width; height: parent.height; }
+
+                Text {
+                    x: 12px;
+                    y: 8px;
+                    width: parent.width - 24px;
+                    height: 22px;
+                    text: equation;
+                    color: #a6a6a6;
+                    font-size: 12px;
+                    font-family: "Inter";
+                    horizontal-alignment: left;
+                    vertical-alignment: center;
+                    overflow: elide;
+                }
+
+                Text {
+                    x: 12px;
+                    y: 30px;
+                    width: parent.width - 24px;
+                    height: 30px;
+                    text: index < root.results.length ? root.results[index] : "";
+                    color: #ffffff;
+                    font-size: 24px;
+                    font-family: "Inter";
+                    font-weight: 500;
+                    horizontal-alignment: left;
+                    vertical-alignment: center;
+                    overflow: elide;
+                }
+            }
+        }
+    }
+}

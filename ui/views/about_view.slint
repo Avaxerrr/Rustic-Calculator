@@ -1,0 +1,114 @@
+export component AboutView {
+    in property <length> margin;
+
+    x: 0px;
+    y: 50px;
+
+    property <length> content-width: root.width - root.margin * 2;
+
+    Image {
+        x: root.margin;
+        y: 26px;
+        width: 56px;
+        height: 56px;
+        source: @image-url("../../assets/calculator.png");
+        image-fit: contain;
+    }
+
+    Text {
+        x: root.margin;
+        y: 102px;
+        width: root.content-width;
+        height: 32px;
+        text: "Rustic Calculator";
+        color: #ffffff;
+        font-size: 24px;
+        font-family: "Inter";
+        font-weight: 700;
+        vertical-alignment: center;
+    }
+
+    Text {
+        x: root.margin;
+        y: 142px;
+        width: root.content-width;
+        height: 24px;
+        text: "Version 0.1.0";
+        color: #d8d8d8;
+        font-size: 14px;
+        font-family: "Inter";
+        font-weight: 600;
+        vertical-alignment: center;
+    }
+
+    Text {
+        x: root.margin;
+        y: 184px;
+        width: root.content-width;
+        height: 48px;
+        text: "A Rust and Slint calculator and converter app.";
+        color: #a6a6a6;
+        font-size: 14px;
+        font-family: "Inter";
+        font-weight: 500;
+        wrap: word-wrap;
+        vertical-alignment: center;
+    }
+
+    Rectangle {
+        x: root.margin;
+        y: 264px;
+        width: root.content-width;
+        height: 52px;
+        border-radius: 4px;
+        background: #252525;
+
+        Text {
+            x: 14px;
+            width: parent.width - 28px;
+            height: parent.height;
+            text: "Created by Avaxerrr";
+            color: #ffffff;
+            font-size: 14px;
+            font-family: "Inter";
+            font-weight: 700;
+            vertical-alignment: center;
+        }
+    }
+
+    Rectangle {
+        x: root.margin;
+        y: 336px;
+        width: root.content-width;
+        height: 76px;
+        border-radius: 4px;
+        background: #252525;
+
+        Text {
+            x: 14px;
+            y: 10px;
+            width: parent.width - 28px;
+            height: 22px;
+            text: "Icon credit";
+            color: #ffffff;
+            font-size: 13px;
+            font-family: "Inter";
+            font-weight: 700;
+            vertical-alignment: center;
+        }
+
+        Text {
+            x: 14px;
+            y: 34px;
+            width: parent.width - 28px;
+            height: 32px;
+            text: "Calculator icon by Apien from Flaticon.";
+            color: #a6a6a6;
+            font-size: 12px;
+            font-family: "Inter";
+            font-weight: 500;
+            wrap: word-wrap;
+            vertical-alignment: center;
+        }
+    }
+}

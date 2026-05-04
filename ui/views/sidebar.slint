@@ -1,0 +1,42 @@
+import { NavButton } from "../components/nav_button.slint";
+
+export component Sidebar inherits Rectangle {
+    in property <string> active-view;
+    in property <string> category-title;
+
+    callback standard-selected();
+    callback category-selected(string);
+    callback shortcuts-selected();
+    callback about-selected();
+
+    background: #202020;
+    border-width: 1px;
+    border-color: #303030;
+
+    Flickable {
+        width: parent.width;
+        height: parent.height;
+        viewport-height: 568px;
+        interactive: self.viewport-height > self.height;
+
+        NavButton { x: 10px; y: 18px; label: "Standard"; has-icon: true; icon-source: @image-url("../../assets/calculator.png"); selected: root.active-view == "calculator"; clicked => { root.standard-selected(); } }
+
+        Text { x: 18px; y: 66px; width: parent.width - 36px; height: 24px; text: "Converter"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
+        NavButton { x: 10px; y: 94px; label: "Volume"; has-icon: true; icon-source: @image-url("../../assets/icons/volume.svg"); selected: root.active-view == "converter" && root.category-title == "Volume"; clicked => { root.category-selected("Volume"); } }
+        NavButton { x: 10px; y: 124px; label: "Length"; has-icon: true; icon-source: @image-url("../../assets/icons/length.svg"); selected: root.active-view == "converter" && root.category-title == "Length"; clicked => { root.category-selected("Length"); } }
+        NavButton { x: 10px; y: 154px; label: "Weight and mass"; has-icon: true; icon-source: @image-url("../../assets/icons/weight-mass.svg"); selected: root.active-view == "converter" && root.category-title == "Weight and mass"; clicked => { root.category-selected("Weight and mass"); } }
+        NavButton { x: 10px; y: 184px; label: "Temperature"; has-icon: true; icon-source: @image-url("../../assets/icons/temperature.svg"); selected: root.active-view == "converter" && root.category-title == "Temperature"; clicked => { root.category-selected("Temperature"); } }
+        NavButton { x: 10px; y: 214px; label: "Energy"; has-icon: true; icon-source: @image-url("../../assets/icons/energy.svg"); selected: root.active-view == "converter" && root.category-title == "Energy"; clicked => { root.category-selected("Energy"); } }
+        NavButton { x: 10px; y: 244px; label: "Area"; has-icon: true; icon-source: @image-url("../../assets/icons/area.svg"); selected: root.active-view == "converter" && root.category-title == "Area"; clicked => { root.category-selected("Area"); } }
+        NavButton { x: 10px; y: 274px; label: "Speed"; has-icon: true; icon-source: @image-url("../../assets/icons/speed.svg"); selected: root.active-view == "converter" && root.category-title == "Speed"; clicked => { root.category-selected("Speed"); } }
+        NavButton { x: 10px; y: 304px; label: "Time"; has-icon: true; icon-source: @image-url("../../assets/icons/time.svg"); selected: root.active-view == "converter" && root.category-title == "Time"; clicked => { root.category-selected("Time"); } }
+        NavButton { x: 10px; y: 334px; label: "Power"; has-icon: true; icon-source: @image-url("../../assets/icons/power.svg"); selected: root.active-view == "converter" && root.category-title == "Power"; clicked => { root.category-selected("Power"); } }
+        NavButton { x: 10px; y: 364px; label: "Data"; has-icon: true; icon-source: @image-url("../../assets/icons/data.svg"); selected: root.active-view == "converter" && root.category-title == "Data"; clicked => { root.category-selected("Data"); } }
+        NavButton { x: 10px; y: 394px; label: "Pressure"; has-icon: true; icon-source: @image-url("../../assets/icons/pressure.svg"); selected: root.active-view == "converter" && root.category-title == "Pressure"; clicked => { root.category-selected("Pressure"); } }
+        NavButton { x: 10px; y: 424px; label: "Angle"; has-icon: true; icon-source: @image-url("../../assets/icons/angle.svg"); selected: root.active-view == "converter" && root.category-title == "Angle"; clicked => { root.category-selected("Angle"); } }
+
+        Text { x: 18px; y: 464px; width: parent.width - 36px; height: 24px; text: "Help"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
+        NavButton { x: 10px; y: 494px; label: "Keyboard shortcuts"; has-icon: true; icon-source: @image-url("../../assets/icons/keyboard.svg"); selected: root.active-view == "shortcuts"; clicked => { root.shortcuts-selected(); } }
+        NavButton { x: 10px; y: 526px; label: "About"; has-icon: true; icon-source: @image-url("../../assets/icons/info.svg"); selected: root.active-view == "about"; clicked => { root.about-selected(); } }
+    }
+}
