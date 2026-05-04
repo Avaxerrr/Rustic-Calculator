@@ -853,32 +853,39 @@ export component MainWindow inherits Window {
 
     title: "Rustic Calculator";
     icon: @image-url("../assets/calculator.png");
-    width: root.compact-width;
-    height: 620px;
     background: #202020;
     default-font-family: "Inter";
     forward-focus: keyboard-focus;
 
-    property <length> compact-width: 400px;
-    property <length> history-panel-width: 320px;
-    property <length> margin: 8px;
-    property <length> display-margin: 18px;
-    property <length> toolbar-margin: 16px;
+    property <length> default-width: 400px;
+    property <length> default-height: 620px;
+    property <length> min-window-width: 360px;
+    property <length> min-window-height: 560px;
+    property <length> max-window-width: 760px;
+    property <length> max-window-height: 760px;
+    property <length> expanded-min-width: 620px;
+    property <length> window-width: content.width;
+    property <length> window-height: content.height;
+    property <length> history-panel-width: root.history-open ? min(320px, max(260px, root.window-width - root.default-width)) : 0px;
+    property <length> content-width: root.active-view == "calculator" && root.history-open ? root.window-width - root.history-panel-width : root.window-width;
+    property <length> margin: max(6px, min(12px, root.content-width / 48));
+    property <length> display-margin: max(18px, min(28px, root.content-width / 18));
+    property <length> toolbar-margin: max(16px, min(24px, root.content-width / 24));
     property <length> gap: 3px;
-    property <length> key-width: (root.compact-width - (root.margin * 2) - (root.gap * 3)) / 4;
-    property <length> memory-width: (root.compact-width - (root.margin * 2) - (root.gap * 5)) / 6;
-    property <length> converter-key-width: (root.width - (root.margin * 2) - (root.gap * 2)) / 3;
+    property <length> key-width: (root.content-width - (root.margin * 2) - (root.gap * 3)) / 4;
+    property <length> memory-width: (root.content-width - (root.margin * 2) - (root.gap * 5)) / 6;
+    property <length> converter-key-width: (root.window-width - (root.margin * 2) - (root.gap * 2)) / 3;
     property <length> converter-wide-key-width: root.converter-key-width * 2 + root.gap;
     property <length> converter-keypad-y: 352px;
 
     function toggle-history() {
         root.history-open = !root.history-open;
-        root.width = root.history-open ? root.compact-width + root.history-panel-width : root.compact-width;
+        if root.history-open { root.width = max(root.window-width, root.default-width + root.history-panel-width); } else { root.width = min(root.window-width, root.default-width); }
     }
 
     function collapse-history() {
+        if root.history-open { root.width = min(root.window-width, root.default-width); }
         root.history-open = false;
-        root.width = root.compact-width;
     }
     function handle-key(event: KeyEvent) -> EventResult {
         if root.active-view == "calculator" {
@@ -920,14 +927,24 @@ export component MainWindow inherits Window {
         return reject;
     }
 
-    keyboard-focus := FocusScope {
-        width: root.width;
-        height: root.height;
-        capture-key-pressed(event) => {
-            return root.handle-key(event);
-        }
+    VerticalLayout {
+        content := Rectangle {
+            min-width: root.history-open ? root.expanded-min-width : root.min-window-width;
+            min-height: root.min-window-height;
+            preferred-width: root.default-width;
+            preferred-height: root.default-height;
+            max-width: root.max-window-width;
+            max-height: root.max-window-height;
+            background: #202020;
 
-        Rectangle {
+            keyboard-focus := FocusScope {
+                width: parent.width;
+                height: parent.height;
+                capture-key-pressed(event) => {
+                    return root.handle-key(event);
+                }
+
+                Rectangle {
             width: parent.width;
             height: parent.height;
             background: #202020;
@@ -937,7 +954,7 @@ export component MainWindow inherits Window {
             Text {
                 x: 56px;
                 y: 8px;
-                width: root.compact-width - 128px;
+                width: root.content-width - 128px;
                 height: 36px;
                 text: root.active-view == "calculator" ? "Standard" : root.active-view == "converter" ? root.category-title : root.active-view == "about" ? "About" : "Keyboard shortcuts";
                 color: #ffffff;
@@ -948,10 +965,10 @@ export component MainWindow inherits Window {
                 overflow: elide;
             }
 
-            if root.active-view == "calculator": IconButton { x: root.compact-width - root.toolbar-margin - 40px; y: 8px; kind: "history"; clicked => { root.toggle-history(); } }
+            if root.active-view == "calculator": IconButton { x: root.content-width - root.toolbar-margin - 40px; y: 8px; kind: "history"; clicked => { root.toggle-history(); } }
 
             if root.active-view == "converter": Rectangle {
-                x: root.width - root.toolbar-margin - 64px;
+                x: root.window-width - root.toolbar-margin - 64px;
                 y: 11px;
                 width: 64px;
                 height: 30px;
@@ -974,7 +991,7 @@ export component MainWindow inherits Window {
             }
 
             if root.active-view == "calculator": CalculatorView {
-                width: root.compact-width;
+                width: root.content-width;
                 height: parent.height;
                 margin: root.margin;
                 display-margin: root.display-margin;
@@ -989,7 +1006,7 @@ export component MainWindow inherits Window {
                 button-pressed(label) => { root.button-pressed(label); }
             }
             if root.active-view == "calculator" && root.history-open: HistoryPanel {
-                x: root.compact-width;
+                x: root.content-width;
                 y: 0px;
                 width: root.history-panel-width;
                 height: parent.height;
@@ -998,12 +1015,12 @@ export component MainWindow inherits Window {
                 clear-history-requested => { root.clear-history-requested(); }
             }
             if root.active-view == "shortcuts": ShortcutsView {
-                width: root.compact-width;
+                width: root.content-width;
                 height: parent.height;
                 margin: root.margin;
             }
             if root.active-view == "about": AboutView {
-                width: root.compact-width;
+                width: root.content-width;
                 height: parent.height;
                 margin: root.margin;
             }
@@ -1029,7 +1046,7 @@ export component MainWindow inherits Window {
             if root.sidebar-open: Rectangle {
                 x: 0px;
                 y: 0px;
-                width: root.width < 324px ? root.width : 324px;
+                width: root.window-width < 324px ? root.window-width : 324px;
                 height: root.height;
                 background: #202020;
                 border-width: 1px;
@@ -1063,6 +1080,8 @@ export component MainWindow inherits Window {
                 }
             }
         }
+    }
+    }
     }
 
     init => {
