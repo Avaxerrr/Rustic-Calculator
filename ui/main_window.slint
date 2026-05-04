@@ -15,13 +15,23 @@ component IconButton {
 
         touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.clicked(); } }
 
-        if root.kind == "menu": Rectangle { x: 13px; y: 12px; width: 18px; height: 2px; background: #f2f2f2; }
-        if root.kind == "menu": Rectangle { x: 13px; y: 19px; width: 18px; height: 2px; background: #f2f2f2; }
-        if root.kind == "menu": Rectangle { x: 13px; y: 26px; width: 18px; height: 2px; background: #f2f2f2; }
+        if root.kind == "menu": Image {
+            x: 10px;
+            y: 8px;
+            width: 24px;
+            height: 24px;
+            source: @image-url("../icons/hamburger-icon.svg");
+            image-fit: contain;
+        }
 
-        if root.kind == "history": Rectangle { x: 12px; y: 10px; width: 20px; height: 20px; border-radius: 10px; border-width: 2px; border-color: #f2f2f2; background: #00000000; }
-        if root.kind == "history": Rectangle { x: 21px; y: 14px; width: 2px; height: 8px; background: #f2f2f2; }
-        if root.kind == "history": Rectangle { x: 22px; y: 21px; width: 6px; height: 2px; background: #f2f2f2; }
+        if root.kind == "history": Image {
+            x: 10px;
+            y: 8px;
+            width: 24px;
+            height: 24px;
+            source: @image-url("../icons/history-icon.svg");
+            image-fit: contain;
+        }
     }
 }
 
@@ -61,6 +71,7 @@ component CalcButton {
     in property <bool> operation: false;
     in property <bool> equal: false;
     in property <bool> active: false;
+    property <bool> has-icon: root.label == "+" || root.label == "-" || root.label == "x" || root.label == "/" || root.label == "=" || root.label == "sqrt" || root.label == "Back" || root.label == "1/x" || root.label == "x^2";
     callback clicked();
 
     width: root.button-width;
@@ -86,10 +97,10 @@ component CalcButton {
 
         touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.clicked(); } }
 
-        Text {
+        if !root.has-icon: Text {
             text: root.label;
             color: #ffffff;
-            font-size: root.label == "Back" ? 20px : root.label == "sqrt" ? 20px : 25px;
+            font-size: root.label == "Back" ? 20px : 22px;
             font-family: "Inter";
             font-weight: root.operation ? 400 : 500;
             horizontal-alignment: center;
@@ -97,6 +108,16 @@ component CalcButton {
             width: parent.width;
             height: parent.height;
         }
+
+        if root.label == "+": Image { x: (parent.width - 24px) / 2; y: 17px; width: 24px; height: 24px; source: @image-url("../icons/plus-icon.svg"); image-fit: contain; }
+        if root.label == "-": Image { x: (parent.width - 24px) / 2; y: 17px; width: 24px; height: 24px; source: @image-url("../icons/minus-icon.svg"); image-fit: contain; }
+        if root.label == "x": Image { x: (parent.width - 24px) / 2; y: 17px; width: 24px; height: 24px; source: @image-url("../icons/small-x-icon.svg"); image-fit: contain; }
+        if root.label == "/": Image { x: (parent.width - 24px) / 2; y: 17px; width: 24px; height: 24px; source: @image-url("../icons/division-icon.svg"); image-fit: contain; }
+        if root.label == "=": Image { x: (parent.width - 24px) / 2; y: 17px; width: 24px; height: 24px; source: @image-url("../icons/equal-icon.svg"); image-fit: contain; }
+        if root.label == "sqrt": Image { x: (parent.width - 24px) / 2; y: 17px; width: 24px; height: 24px; source: @image-url("../icons/square-root-icon.svg"); image-fit: contain; }
+        if root.label == "Back": Image { x: (parent.width - 24px) / 2; y: 17px; width: 24px; height: 24px; source: @image-url("../icons/backspace-icon.svg"); image-fit: contain; }
+        if root.label == "1/x": Image { x: (parent.width - 24px) / 2; y: 17px; width: 24px; height: 24px; source: @image-url("../icons/reciprocal-icon.svg"); image-fit: contain; }
+        if root.label == "x^2": Image { x: (parent.width - 24px) / 2; y: 17px; width: 24px; height: 24px; source: @image-url("../icons/square-icon.svg"); image-fit: contain; }
     }
 }
 
