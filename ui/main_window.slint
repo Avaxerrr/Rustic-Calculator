@@ -503,6 +503,86 @@ component ConverterView {
     ConverterKeyButton { x: root.margin + 2 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 158px; button-width: root.converter-key-width; label: "."; clicked => { root.converter-button-pressed("."); } }
 }
 
+component ShortcutRow {
+    in property <string> action;
+    in property <string> keys;
+    in property <length> row-width;
+
+    width: root.row-width;
+    height: 34px;
+
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+        border-radius: 4px;
+        background: #252525;
+
+        Text {
+            x: 14px;
+            width: parent.width - 132px;
+            height: parent.height;
+            text: root.action;
+            color: #d8d8d8;
+            font-size: 13px;
+            font-family: "Inter";
+            font-weight: 500;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+
+        Text {
+            x: parent.width - 110px;
+            width: 96px;
+            height: parent.height;
+            text: root.keys;
+            color: #ffffff;
+            font-size: 12px;
+            font-family: "Inter";
+            font-weight: 700;
+            horizontal-alignment: right;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+    }
+}
+
+component ShortcutsView {
+    in property <length> margin;
+
+    x: 0px;
+    y: 50px;
+
+    property <length> content-width: root.width - root.margin * 2;
+
+    Text {
+        x: root.margin;
+        y: 20px;
+        width: root.content-width;
+        height: 42px;
+        text: "Use these keys while the calculator or converter is focused.";
+        color: #a6a6a6;
+        font-size: 13px;
+        font-family: "Inter";
+        font-weight: 500;
+        wrap: word-wrap;
+        vertical-alignment: center;
+    }
+
+    Text { x: root.margin; y: 78px; width: root.content-width; height: 22px; text: "Calculator"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
+    ShortcutRow { x: root.margin; y: 106px; row-width: root.content-width; action: "Enter numbers"; keys: "0-9"; }
+    ShortcutRow { x: root.margin; y: 144px; row-width: root.content-width; action: "Decimal point"; keys: "."; }
+    ShortcutRow { x: root.margin; y: 182px; row-width: root.content-width; action: "Calculate result"; keys: "Enter / ="; }
+    ShortcutRow { x: root.margin; y: 220px; row-width: root.content-width; action: "Operators"; keys: "+ - * /"; }
+    ShortcutRow { x: root.margin; y: 258px; row-width: root.content-width; action: "Backspace"; keys: "Backspace"; }
+    ShortcutRow { x: root.margin; y: 296px; row-width: root.content-width; action: "Clear entry"; keys: "Delete"; }
+    ShortcutRow { x: root.margin; y: 334px; row-width: root.content-width; action: "Clear"; keys: "Esc"; }
+
+    Text { x: root.margin; y: 390px; width: root.content-width; height: 22px; text: "Converter"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
+    ShortcutRow { x: root.margin; y: 418px; row-width: root.content-width; action: "Enter value"; keys: "0-9"; }
+    ShortcutRow { x: root.margin; y: 456px; row-width: root.content-width; action: "Decimal point"; keys: "."; }
+    ShortcutRow { x: root.margin; y: 494px; row-width: root.content-width; action: "Delete digit"; keys: "Backspace"; }
+    ShortcutRow { x: root.margin; y: 532px; row-width: root.content-width; action: "Clear value"; keys: "Delete / Esc"; }
+}
 export component MainWindow inherits Window {
     in-out property <string> active-view: "calculator";
     in-out property <bool> sidebar-open: false;
@@ -530,8 +610,10 @@ export component MainWindow inherits Window {
     callback from-unit-selected(string);
     callback to-unit-selected(string);
     callback swap-units-pressed();
+    callback shortcuts-selected();
 
     title: "Rustic Calculator";
+    icon: @image-url("../assets/calculator.png");
     width: 400px;
     height: 620px;
     background: #202020;
@@ -570,7 +652,7 @@ export component MainWindow inherits Window {
             if event.text == Key.Backspace { root.button-pressed("Back"); return accept; }
             if event.text == Key.Delete { root.button-pressed("CE"); return accept; }
             if event.text == Key.Escape { root.button-pressed(root.clear-label); return accept; }
-        } else {
+        } else if root.active-view == "converter" {
             if event.text == "0" { root.converter-button-pressed("0"); return accept; }
             if event.text == "1" { root.converter-button-pressed("1"); return accept; }
             if event.text == "2" { root.converter-button-pressed("2"); return accept; }
@@ -607,7 +689,7 @@ export component MainWindow inherits Window {
                 y: 8px;
                 width: root.width - 128px;
                 height: 36px;
-                text: root.active-view == "calculator" ? "Standard" : root.category-title;
+                text: root.active-view == "calculator" ? "Standard" : root.active-view == "converter" ? root.category-title : "Keyboard shortcuts";
                 color: #ffffff;
                 font-size: 19px;
                 font-family: "Inter";
@@ -656,6 +738,11 @@ export component MainWindow inherits Window {
                 display-font-size: root.display-font-size;
                 button-pressed(label) => { root.button-pressed(label); }
             }
+            if root.active-view == "shortcuts": ShortcutsView {
+                width: parent.width;
+                height: parent.height;
+                margin: root.margin;
+            }
             if root.active-view == "converter": ConverterView {
                 width: parent.width;
                 height: parent.height;
@@ -700,6 +787,9 @@ export component MainWindow inherits Window {
                 NavButton { x: 10px; y: 414px; label: "Data"; selected: root.active-view == "converter" && root.category-title == "Data"; clicked => { root.category-selected("Data"); } }
                 NavButton { x: 10px; y: 446px; label: "Pressure"; selected: root.active-view == "converter" && root.category-title == "Pressure"; clicked => { root.category-selected("Pressure"); } }
                 NavButton { x: 10px; y: 478px; label: "Angle"; selected: root.active-view == "converter" && root.category-title == "Angle"; clicked => { root.category-selected("Angle"); } }
+
+                Text { x: 18px; y: 526px; width: parent.width - 36px; height: 24px; text: "Help"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
+                NavButton { x: 10px; y: 556px; label: "Keyboard shortcuts"; selected: root.active-view == "shortcuts"; clicked => { root.shortcuts-selected(); } }
             }
         }
     }

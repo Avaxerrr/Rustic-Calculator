@@ -63,6 +63,14 @@ pub fn run(ui: MainWindow) -> Result<(), slint::PlatformError> {
     });
 
     let ui_handle = ui.as_weak();
+    ui.on_shortcuts_selected(move || {
+        if let Some(ui) = ui_handle.upgrade() {
+            ui.set_active_view("shortcuts".into());
+            ui.set_sidebar_open(false);
+        }
+    });
+
+    let ui_handle = ui.as_weak();
     ui.on_from_unit_selected({
         let converter = Rc::clone(&converter);
 
