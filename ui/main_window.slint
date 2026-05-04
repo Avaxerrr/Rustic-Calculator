@@ -11,7 +11,7 @@ component IconButton {
         width: parent.width;
         height: parent.height;
         border-radius: 4px;
-        background: touch.pressed ? #3a3a3a : touch.has-hover ? #303030 : #202020;
+        background: #00000000;
 
         touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.clicked(); } }
 
@@ -21,7 +21,7 @@ component IconButton {
             width: 22px;
             height: 16px;
             commands: "M 0 1 L 22 1 M 0 8 L 22 8 M 0 15 L 22 15";
-            stroke: #f2f2f2;
+            stroke: touch.pressed || touch.has-hover ? #ffffff : #d8d8d8;
             stroke-width: 2px;
             stroke-line-cap: square;
             anti-alias: true;
@@ -33,7 +33,7 @@ component IconButton {
             width: 24px;
             height: 24px;
             commands: "M 22 12 A 10 10 0 1 1 21.99 11.5 M 12 7 L 12 12 L 16.5 15";
-            stroke: #f2f2f2;
+            stroke: touch.pressed || touch.has-hover ? #ffffff : #d8d8d8;
             stroke-width: 2px;
             stroke-line-cap: square;
             stroke-line-join: miter;
@@ -150,7 +150,7 @@ component ConverterKeyButton {
     callback clicked();
 
     width: root.button-width;
-    height: 39px;
+    height: 48px;
 
     Rectangle {
         width: parent.width;
@@ -191,7 +191,7 @@ component TextDropdown {
         width: parent.width;
         height: parent.height;
         border-radius: 4px;
-        background: touch.pressed || touch.has-hover ? #2b2b2b : #00000000;
+        background: #00000000;
 
         touch := TouchArea {
             width: parent.width;
@@ -260,7 +260,7 @@ component TextDropdown {
                     width: parent.width;
                     height: 32px;
                     border-radius: 4px;
-                    background: option-touch.has-hover ? #323232 : #00000000;
+                    background: #00000000;
 
                     option-touch := TouchArea {
                         width: parent.width;
@@ -302,7 +302,7 @@ component NavButton {
         width: parent.width;
         height: parent.height;
         border-radius: 4px;
-        background: root.selected ? #303030 : touch.has-hover ? #2b2b2b : #202020;
+        background: root.selected ? #303030 : #202020;
 
         touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.clicked(); } }
 
@@ -320,10 +320,10 @@ component NavButton {
             width: parent.width - 24px;
             height: parent.height;
             text: root.label;
-            color: root.selected ? #ffffff : #d8d8d8;
+            color: root.selected || touch.has-hover ? #ffffff : #d8d8d8;
             font-size: 13px;
             font-family: "Inter";
-            font-weight: root.selected ? 600 : 500;
+            font-weight: root.selected || touch.has-hover ? 600 : 500;
             vertical-alignment: center;
             overflow: elide;
         }
@@ -489,18 +489,18 @@ component ConverterView {
 
     ConverterKeyButton { x: root.margin; y: root.converter-keypad-y - 50px; button-width: root.converter-wide-key-width; label: "CE"; utility: true; clicked => { root.converter-button-pressed("CE"); } }
     ConverterKeyButton { x: root.margin + root.converter-wide-key-width + root.gap; y: root.converter-keypad-y - 50px; button-width: root.converter-key-width; label: "Back"; utility: true; clicked => { root.converter-button-pressed("Back"); } }
-    ConverterKeyButton { x: root.margin + 0 * (root.converter-key-width + root.gap); y: root.converter-keypad-y - 7px; button-width: root.converter-key-width; label: "7"; clicked => { root.converter-button-pressed("7"); } }
-    ConverterKeyButton { x: root.margin + 1 * (root.converter-key-width + root.gap); y: root.converter-keypad-y - 7px; button-width: root.converter-key-width; label: "8"; clicked => { root.converter-button-pressed("8"); } }
-    ConverterKeyButton { x: root.margin + 2 * (root.converter-key-width + root.gap); y: root.converter-keypad-y - 7px; button-width: root.converter-key-width; label: "9"; clicked => { root.converter-button-pressed("9"); } }
-    ConverterKeyButton { x: root.margin + 0 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 36px; button-width: root.converter-key-width; label: "4"; clicked => { root.converter-button-pressed("4"); } }
-    ConverterKeyButton { x: root.margin + 1 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 36px; button-width: root.converter-key-width; label: "5"; clicked => { root.converter-button-pressed("5"); } }
-    ConverterKeyButton { x: root.margin + 2 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 36px; button-width: root.converter-key-width; label: "6"; clicked => { root.converter-button-pressed("6"); } }
-    ConverterKeyButton { x: root.margin + 0 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 79px; button-width: root.converter-key-width; label: "1"; clicked => { root.converter-button-pressed("1"); } }
-    ConverterKeyButton { x: root.margin + 1 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 79px; button-width: root.converter-key-width; label: "2"; clicked => { root.converter-button-pressed("2"); } }
-    ConverterKeyButton { x: root.margin + 2 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 79px; button-width: root.converter-key-width; label: "3"; clicked => { root.converter-button-pressed("3"); } }
-    ConverterKeyButton { x: root.margin + 0 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 122px; button-width: root.converter-key-width; label: "+/-"; clicked => { root.converter-button-pressed("+/-"); } }
-    ConverterKeyButton { x: root.margin + 1 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 122px; button-width: root.converter-key-width; label: "0"; clicked => { root.converter-button-pressed("0"); } }
-    ConverterKeyButton { x: root.margin + 2 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 122px; button-width: root.converter-key-width; label: "."; clicked => { root.converter-button-pressed("."); } }
+    ConverterKeyButton { x: root.margin + 0 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 2px; button-width: root.converter-key-width; label: "7"; clicked => { root.converter-button-pressed("7"); } }
+    ConverterKeyButton { x: root.margin + 1 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 2px; button-width: root.converter-key-width; label: "8"; clicked => { root.converter-button-pressed("8"); } }
+    ConverterKeyButton { x: root.margin + 2 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 2px; button-width: root.converter-key-width; label: "9"; clicked => { root.converter-button-pressed("9"); } }
+    ConverterKeyButton { x: root.margin + 0 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 54px; button-width: root.converter-key-width; label: "4"; clicked => { root.converter-button-pressed("4"); } }
+    ConverterKeyButton { x: root.margin + 1 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 54px; button-width: root.converter-key-width; label: "5"; clicked => { root.converter-button-pressed("5"); } }
+    ConverterKeyButton { x: root.margin + 2 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 54px; button-width: root.converter-key-width; label: "6"; clicked => { root.converter-button-pressed("6"); } }
+    ConverterKeyButton { x: root.margin + 0 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 106px; button-width: root.converter-key-width; label: "1"; clicked => { root.converter-button-pressed("1"); } }
+    ConverterKeyButton { x: root.margin + 1 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 106px; button-width: root.converter-key-width; label: "2"; clicked => { root.converter-button-pressed("2"); } }
+    ConverterKeyButton { x: root.margin + 2 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 106px; button-width: root.converter-key-width; label: "3"; clicked => { root.converter-button-pressed("3"); } }
+    ConverterKeyButton { x: root.margin + 0 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 158px; button-width: root.converter-key-width; label: "+/-"; clicked => { root.converter-button-pressed("+/-"); } }
+    ConverterKeyButton { x: root.margin + 1 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 158px; button-width: root.converter-key-width; label: "0"; clicked => { root.converter-button-pressed("0"); } }
+    ConverterKeyButton { x: root.margin + 2 * (root.converter-key-width + root.gap); y: root.converter-keypad-y + 158px; button-width: root.converter-key-width; label: "."; clicked => { root.converter-button-pressed("."); } }
 }
 
 export component MainWindow inherits Window {
@@ -546,7 +546,7 @@ export component MainWindow inherits Window {
     property <length> memory-width: (root.width - (root.margin * 2) - (root.gap * 5)) / 6;
     property <length> converter-key-width: (root.width - (root.margin * 2) - (root.gap * 2)) / 3;
     property <length> converter-wide-key-width: root.converter-key-width * 2 + root.gap;
-    property <length> converter-keypad-y: 386px;
+    property <length> converter-keypad-y: 352px;
 
     function handle-key(event: KeyEvent) -> EventResult {
         if root.active-view == "calculator" {
