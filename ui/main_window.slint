@@ -15,22 +15,30 @@ component IconButton {
 
         touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.clicked(); } }
 
-        if root.kind == "menu": Image {
-            x: 10px;
-            y: 8px;
-            width: 24px;
-            height: 24px;
-            source: @image-url("../icons/hamburger-icon.svg");
-            image-fit: contain;
+        if root.kind == "menu": Path {
+            x: 11px;
+            y: 12px;
+            width: 22px;
+            height: 16px;
+            commands: "M 0 1 L 22 1 M 0 8 L 22 8 M 0 15 L 22 15";
+            stroke: #f2f2f2;
+            stroke-width: 2px;
+            stroke-line-cap: square;
+            anti-alias: true;
         }
 
-        if root.kind == "history": Image {
+        if root.kind == "history": Path {
             x: 10px;
             y: 8px;
             width: 24px;
             height: 24px;
-            source: @image-url("../icons/history-icon.svg");
-            image-fit: contain;
+            commands: "M 22 12 A 10 10 0 1 1 21.99 11.5 M 12 7 L 12 12 L 16.5 15";
+            stroke: #f2f2f2;
+            stroke-width: 2px;
+            stroke-line-cap: square;
+            stroke-line-join: miter;
+            fill: transparent;
+            anti-alias: true;
         }
     }
 }
@@ -71,7 +79,8 @@ component CalcButton {
     in property <bool> operation: false;
     in property <bool> equal: false;
     in property <bool> active: false;
-    property <bool> has-icon: root.label == "+" || root.label == "-" || root.label == "x" || root.label == "/" || root.label == "=" || root.label == "sqrt" || root.label == "Back" || root.label == "1/x" || root.label == "x^2";
+    property <bool> has-icon: root.label == "Back";
+    property <string> visual-label: root.label == "x" ? "×" : root.label == "/" ? "÷" : root.label == "sqrt" ? "√x" : root.label == "x^2" ? "x²" : root.label;
     callback clicked();
 
     width: root.button-width;
@@ -98,9 +107,9 @@ component CalcButton {
         touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.clicked(); } }
 
         if !root.has-icon: Text {
-            text: root.label;
+            text: root.visual-label;
             color: #ffffff;
-            font-size: root.label == "Back" ? 20px : 22px;
+            font-size: 22px;
             font-family: "Inter";
             font-weight: root.operation ? 400 : 500;
             horizontal-alignment: center;
@@ -109,15 +118,19 @@ component CalcButton {
             height: parent.height;
         }
 
-        if root.label == "+": Image { x: (parent.width - 24px) / 2; y: 17px; width: 24px; height: 24px; source: @image-url("../icons/plus-icon.svg"); image-fit: contain; }
-        if root.label == "-": Image { x: (parent.width - 24px) / 2; y: 17px; width: 24px; height: 24px; source: @image-url("../icons/minus-icon.svg"); image-fit: contain; }
-        if root.label == "x": Image { x: (parent.width - 24px) / 2; y: 17px; width: 24px; height: 24px; source: @image-url("../icons/small-x-icon.svg"); image-fit: contain; }
-        if root.label == "/": Image { x: (parent.width - 24px) / 2; y: 17px; width: 24px; height: 24px; source: @image-url("../icons/division-icon.svg"); image-fit: contain; }
-        if root.label == "=": Image { x: (parent.width - 24px) / 2; y: 17px; width: 24px; height: 24px; source: @image-url("../icons/equal-icon.svg"); image-fit: contain; }
-        if root.label == "sqrt": Image { x: (parent.width - 24px) / 2; y: 17px; width: 24px; height: 24px; source: @image-url("../icons/square-root-icon.svg"); image-fit: contain; }
-        if root.label == "Back": Image { x: (parent.width - 24px) / 2; y: 17px; width: 24px; height: 24px; source: @image-url("../icons/backspace-icon.svg"); image-fit: contain; }
-        if root.label == "1/x": Image { x: (parent.width - 24px) / 2; y: 17px; width: 24px; height: 24px; source: @image-url("../icons/reciprocal-icon.svg"); image-fit: contain; }
-        if root.label == "x^2": Image { x: (parent.width - 24px) / 2; y: 17px; width: 24px; height: 24px; source: @image-url("../icons/square-icon.svg"); image-fit: contain; }
+        if root.label == "Back": Path {
+            x: (parent.width - 26px) / 2;
+            y: 16px;
+            width: 26px;
+            height: 26px;
+            commands: "M 24 7 L 9 7 L 3 13 L 9 19 L 24 19 Z M 12 10 L 18 16 M 18 10 L 12 16";
+            stroke: #f2f2f2;
+            stroke-width: 2px;
+            stroke-line-cap: square;
+            stroke-line-join: miter;
+            fill: transparent;
+            anti-alias: true;
+        }
     }
 }
 
