@@ -1,4 +1,4 @@
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 enum Operator {
     Add,
     Subtract,
@@ -6,9 +6,28 @@ enum Operator {
     Divide,
 }
 
+impl Operator {
+    fn label(self) -> &'static str {
+        match self {
+            Operator::Add => "+",
+            Operator::Subtract => "-",
+            Operator::Multiply => "x",
+            Operator::Divide => "/",
+        }
+    }
+}
+
+pub struct CalculatorSnapshot {
+    pub display: String,
+    pub equation: String,
+    pub active_operator: String,
+    pub clear_label: String,
+}
+
 #[derive(Default)]
 pub struct Calculator {
     display: String,
+    equation: String,
     accumulator: Option<f64>,
     pending_operator: Option<Operator>,
     reset_display_on_next_digit: bool,
@@ -24,7 +43,28 @@ impl Calculator {
         }
     }
 
-    pub fn press(&mut self, label: &str) -> String {
+    pub fn snapshot(&self) -> CalculatorSnapshot {
+        CalculatorSnapshot {
+            display: format_display(self.display()),
+            equation: self.equation.clone(),
+            active_operator: self
+                .pending_operator
+                .filter(|_| self.reset_display_on_next_digit)
+                .map(|operator| operator.label().to_owned())
+                .unwrap_or_default(),
+            clear_label: if self.display() == "0"
+                && self.accumulator.is_none()
+                && self.pending_operator.is_none()
+                && !self.has_error
+            {
+                "AC".to_owned()
+            } else {
+                "C".to_owned()
+            },
+        }
+    }
+
+    pub fn press(&mut self, label: &str) -> CalculatorSnapshot {
         match label {
             "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" => self.input_digit(label),
             "." => self.input_decimal_point(),
@@ -34,16 +74,18 @@ impl Calculator {
             "/" => self.input_operator(Operator::Divide),
             "=" => self.evaluate_pending(),
             "+/-" => self.toggle_sign(),
+            "%" => self.percent(),
             "Back" => self.backspace(),
-            "C" => self.clear(),
+            "C" | "AC" | "CE" => self.clear(),
             _ => {}
         }
 
-        self.display().to_owned()
+        self.snapshot()
     }
 
     fn clear(&mut self) {
         self.display.clear();
+        self.equation.clear();
         self.accumulator = None;
         self.pending_operator = None;
         self.reset_display_on_next_digit = false;
@@ -92,6 +134,7 @@ impl Calculator {
         }
 
         self.pending_operator = Some(operator);
+        self.equation = format!("{} {}", self.display(), operator.label());
         self.reset_display_on_next_digit = true;
     }
 
@@ -107,6 +150,12 @@ impl Calculator {
 
         let left = self.accumulator.unwrap_or_else(|| self.current_value());
         let right = self.current_value();
+        self.equation = format!(
+            "{} {} {} =",
+            format_number(left),
+            operator.label(),
+            format_number(right)
+        );
 
         let Some(result) = apply_operator(left, right, operator) else {
             self.display = "Error".to_owned();
@@ -131,6 +180,14 @@ impl Calculator {
         } else if self.display() != "0" {
             self.display.insert(0, '-');
         }
+    }
+
+    fn percent(&mut self) {
+        if self.has_error {
+            return;
+        }
+
+        self.display = format_number(self.current_value() / 100.0);
     }
 
     fn backspace(&mut self) {
@@ -190,6 +247,36 @@ fn format_number(value: f64) -> String {
     if text == "-0" { "0".to_owned() } else { text }
 }
 
+fn format_display(value: &str) -> String {
+    if value == "Error" {
+        return value.to_owned();
+    }
+
+    let Some((whole, decimal)) = value.split_once('.') else {
+        return add_group_separators(value);
+    };
+
+    format!("{}.{}", add_group_separators(whole), decimal)
+}
+
+fn add_group_separators(value: &str) -> String {
+    let (sign, digits) = value
+        .strip_prefix('-')
+        .map_or(("", value), |digits| ("-", digits));
+    let mut grouped = String::new();
+
+    for (index, digit) in digits.chars().rev().enumerate() {
+        if index > 0 && index % 3 == 0 {
+            grouped.push(',');
+        }
+
+        grouped.push(digit);
+    }
+
+    let grouped: String = grouped.chars().rev().collect();
+    format!("{sign}{grouped}")
+}
+
 #[cfg(test)]
 mod tests {
     use super::Calculator;
@@ -202,7 +289,7 @@ mod tests {
         calculator.press("+");
         calculator.press("3");
 
-        assert_eq!(calculator.press("="), "5");
+        assert_eq!(calculator.press("=").display, "5");
     }
 
     #[test]
@@ -212,8 +299,30 @@ mod tests {
         calculator.press("8");
         calculator.press("/");
         calculator.press("0");
-        assert_eq!(calculator.press("="), "Error");
+        assert_eq!(calculator.press("=").display, "Error");
 
-        assert_eq!(calculator.press("1"), "1");
+        assert_eq!(calculator.press("1").display, "1");
+    }
+
+    #[test]
+    fn tracks_active_operator() {
+        let mut calculator = Calculator::default();
+
+        calculator.press("9");
+        let snapshot = calculator.press("x");
+
+        assert_eq!(snapshot.equation, "9 x");
+        assert_eq!(snapshot.active_operator, "x");
+    }
+
+    #[test]
+    fn formats_grouped_display() {
+        let mut calculator = Calculator::default();
+
+        for digit in ["1", "2", "3", "4", "5", "6"] {
+            calculator.press(digit);
+        }
+
+        assert_eq!(calculator.snapshot().display, "123,456");
     }
 }

@@ -1,84 +1,201 @@
-﻿import { Button } from "std-widgets.slint";
+component IconButton {
+    in property <string> kind;
+    callback clicked();
 
-component CalculatorButton inherits Button {
+    width: 44px;
+    height: 40px;
+
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+        border-radius: 4px;
+        background: touch.pressed ? #3a3a3a : touch.has-hover ? #303030 : #202020;
+
+        touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.clicked(); } }
+
+        if root.kind == "menu": Rectangle { x: 13px; y: 12px; width: 18px; height: 2px; background: #f2f2f2; }
+        if root.kind == "menu": Rectangle { x: 13px; y: 19px; width: 18px; height: 2px; background: #f2f2f2; }
+        if root.kind == "menu": Rectangle { x: 13px; y: 26px; width: 18px; height: 2px; background: #f2f2f2; }
+
+        if root.kind == "history": Rectangle { x: 12px; y: 10px; width: 20px; height: 20px; border-radius: 10px; border-width: 2px; border-color: #f2f2f2; background: #00000000; }
+        if root.kind == "history": Rectangle { x: 21px; y: 14px; width: 2px; height: 8px; background: #f2f2f2; }
+        if root.kind == "history": Rectangle { x: 22px; y: 21px; width: 6px; height: 2px; background: #f2f2f2; }
+    }
+}
+
+component MemoryButton {
     in property <string> label;
+    in property <length> button-width;
+    callback clicked();
 
-    text: label;
-    min-height: 48px;
+    width: root.button-width;
+    height: 32px;
+
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+        border-radius: 4px;
+        background: touch.pressed ? #343434 : touch.has-hover ? #2c2c2c : #202020;
+
+        touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.clicked(); } }
+
+        Text {
+            text: root.label;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 600;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            width: parent.width;
+            height: parent.height;
+        }
+    }
+}
+
+component CalcButton {
+    in property <string> label;
+    in property <length> button-width;
+    in property <bool> operation: false;
+    in property <bool> equal: false;
+    in property <bool> active: false;
+    callback clicked();
+
+    width: root.button-width;
+    height: 58px;
+
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+        border-radius: 4px;
+        background: touch.pressed
+            ? (root.equal ? #6a6a6a : #464646)
+            : root.active
+                ? #4a4a4a
+                : touch.has-hover
+                    ? (root.equal ? #5b5b5b : root.operation ? #383838 : #3b3b3b)
+                    : root.equal
+                        ? #515151
+                        : root.operation
+                            ? #2b2b2b
+                            : #323232;
+        border-width: root.active ? 1px : 0px;
+        border-color: #767676;
+
+        touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.clicked(); } }
+
+        Text {
+            text: root.label;
+            color: #ffffff;
+            font-size: root.label == "Back" ? 20px : root.label == "sqrt" ? 20px : 25px;
+            font-weight: root.operation ? 400 : 500;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            width: parent.width;
+            height: parent.height;
+        }
+    }
 }
 
 export component MainWindow inherits Window {
     in property <string> display-text: "0";
+    in property <string> equation-text: "";
+    in property <string> active-operator: "";
+    in property <string> clear-label: "AC";
     callback button-pressed(string);
 
     title: "Rustic Calculator";
-    width: 320px;
-    height: 440px;
+    width: 400px;
+    height: 620px;
+    background: #202020;
 
-    VerticalLayout {
-        padding: 16px;
-        spacing: 8px;
+    property <length> margin: 8px;
+    property <length> gap: 4px;
+    property <length> key-width: (root.width - (root.margin * 2) - (root.gap * 3)) / 4;
+    property <length> memory-width: (root.width - (root.margin * 2) - (root.gap * 5)) / 6;
 
-        Rectangle {
-            height: 84px;
-            border-radius: 6px;
-            background: #20242c;
+    Rectangle {
+        width: root.width;
+        height: root.height;
+        background: #202020;
 
-            Text {
-                text: root.display-text;
-                color: white;
-                font-size: 36px;
-                horizontal-alignment: right;
-                vertical-alignment: center;
-                overflow: elide;
-                x: 12px;
-                width: parent.width - 24px;
-                height: parent.height;
-            }
+        IconButton { x: root.margin; y: 10px; kind: "menu"; clicked => { } }
+
+        Text {
+            x: 60px;
+            y: 10px;
+            width: root.width - 120px;
+            height: 40px;
+            text: "Standard";
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 600;
+            vertical-alignment: center;
         }
 
-        HorizontalLayout {
-            spacing: 8px;
+        IconButton { x: root.width - 52px; y: 10px; kind: "history"; clicked => { } }
 
-            CalculatorButton { label: "C"; clicked => { root.button-pressed("C"); } }
-            CalculatorButton { label: "Back"; clicked => { root.button-pressed("Back"); } }
-            CalculatorButton { label: "+/-"; clicked => { root.button-pressed("+/-"); } }
-            CalculatorButton { label: "/"; clicked => { root.button-pressed("/"); } }
+        Text {
+            x: root.margin;
+            y: 76px;
+            width: root.width - root.margin * 2;
+            height: 24px;
+            text: root.equation-text;
+            color: #a6a6a6;
+            font-size: 14px;
+            horizontal-alignment: right;
+            vertical-alignment: center;
+            overflow: elide;
         }
 
-        HorizontalLayout {
-            spacing: 8px;
-
-            CalculatorButton { label: "7"; clicked => { root.button-pressed("7"); } }
-            CalculatorButton { label: "8"; clicked => { root.button-pressed("8"); } }
-            CalculatorButton { label: "9"; clicked => { root.button-pressed("9"); } }
-            CalculatorButton { label: "x"; clicked => { root.button-pressed("x"); } }
+        Text {
+            x: root.margin;
+            y: 106px;
+            width: root.width - root.margin * 2;
+            height: 78px;
+            text: root.display-text;
+            color: #ffffff;
+            font-size: 52px;
+            font-weight: 600;
+            horizontal-alignment: right;
+            vertical-alignment: center;
+            overflow: elide;
         }
 
-        HorizontalLayout {
-            spacing: 8px;
+        MemoryButton { x: root.margin + 0 * (root.memory-width + root.gap); y: 194px; button-width: root.memory-width; label: "MC"; clicked => { } }
+        MemoryButton { x: root.margin + 1 * (root.memory-width + root.gap); y: 194px; button-width: root.memory-width; label: "MR"; clicked => { } }
+        MemoryButton { x: root.margin + 2 * (root.memory-width + root.gap); y: 194px; button-width: root.memory-width; label: "M+"; clicked => { } }
+        MemoryButton { x: root.margin + 3 * (root.memory-width + root.gap); y: 194px; button-width: root.memory-width; label: "M-"; clicked => { } }
+        MemoryButton { x: root.margin + 4 * (root.memory-width + root.gap); y: 194px; button-width: root.memory-width; label: "MS"; clicked => { } }
+        MemoryButton { x: root.margin + 5 * (root.memory-width + root.gap); y: 194px; button-width: root.memory-width; label: "M"; clicked => { } }
 
-            CalculatorButton { label: "4"; clicked => { root.button-pressed("4"); } }
-            CalculatorButton { label: "5"; clicked => { root.button-pressed("5"); } }
-            CalculatorButton { label: "6"; clicked => { root.button-pressed("6"); } }
-            CalculatorButton { label: "-"; clicked => { root.button-pressed("-"); } }
-        }
+        CalcButton { x: root.margin + 0 * (root.key-width + root.gap); y: 232px; button-width: root.key-width; label: "%"; operation: true; clicked => { root.button-pressed("%"); } }
+        CalcButton { x: root.margin + 1 * (root.key-width + root.gap); y: 232px; button-width: root.key-width; label: "CE"; operation: true; clicked => { root.button-pressed("CE"); } }
+        CalcButton { x: root.margin + 2 * (root.key-width + root.gap); y: 232px; button-width: root.key-width; label: root.clear-label; operation: true; clicked => { root.button-pressed(root.clear-label); } }
+        CalcButton { x: root.margin + 3 * (root.key-width + root.gap); y: 232px; button-width: root.key-width; label: "Back"; operation: true; clicked => { root.button-pressed("Back"); } }
 
-        HorizontalLayout {
-            spacing: 8px;
+        CalcButton { x: root.margin + 0 * (root.key-width + root.gap); y: 294px; button-width: root.key-width; label: "1/x"; operation: true; clicked => { } }
+        CalcButton { x: root.margin + 1 * (root.key-width + root.gap); y: 294px; button-width: root.key-width; label: "x^2"; operation: true; clicked => { } }
+        CalcButton { x: root.margin + 2 * (root.key-width + root.gap); y: 294px; button-width: root.key-width; label: "sqrt"; operation: true; clicked => { } }
+        CalcButton { x: root.margin + 3 * (root.key-width + root.gap); y: 294px; button-width: root.key-width; label: "/"; operation: true; active: root.active-operator == "/"; clicked => { root.button-pressed("/"); } }
 
-            CalculatorButton { label: "1"; clicked => { root.button-pressed("1"); } }
-            CalculatorButton { label: "2"; clicked => { root.button-pressed("2"); } }
-            CalculatorButton { label: "3"; clicked => { root.button-pressed("3"); } }
-            CalculatorButton { label: "+"; clicked => { root.button-pressed("+"); } }
-        }
+        CalcButton { x: root.margin + 0 * (root.key-width + root.gap); y: 356px; button-width: root.key-width; label: "7"; clicked => { root.button-pressed("7"); } }
+        CalcButton { x: root.margin + 1 * (root.key-width + root.gap); y: 356px; button-width: root.key-width; label: "8"; clicked => { root.button-pressed("8"); } }
+        CalcButton { x: root.margin + 2 * (root.key-width + root.gap); y: 356px; button-width: root.key-width; label: "9"; clicked => { root.button-pressed("9"); } }
+        CalcButton { x: root.margin + 3 * (root.key-width + root.gap); y: 356px; button-width: root.key-width; label: "x"; operation: true; active: root.active-operator == "x"; clicked => { root.button-pressed("x"); } }
 
-        HorizontalLayout {
-            spacing: 8px;
+        CalcButton { x: root.margin + 0 * (root.key-width + root.gap); y: 418px; button-width: root.key-width; label: "4"; clicked => { root.button-pressed("4"); } }
+        CalcButton { x: root.margin + 1 * (root.key-width + root.gap); y: 418px; button-width: root.key-width; label: "5"; clicked => { root.button-pressed("5"); } }
+        CalcButton { x: root.margin + 2 * (root.key-width + root.gap); y: 418px; button-width: root.key-width; label: "6"; clicked => { root.button-pressed("6"); } }
+        CalcButton { x: root.margin + 3 * (root.key-width + root.gap); y: 418px; button-width: root.key-width; label: "-"; operation: true; active: root.active-operator == "-"; clicked => { root.button-pressed("-"); } }
 
-            CalculatorButton { label: "0"; clicked => { root.button-pressed("0"); } }
-            CalculatorButton { label: "."; clicked => { root.button-pressed("."); } }
-            CalculatorButton { label: "="; clicked => { root.button-pressed("="); } }
-        }
+        CalcButton { x: root.margin + 0 * (root.key-width + root.gap); y: 480px; button-width: root.key-width; label: "1"; clicked => { root.button-pressed("1"); } }
+        CalcButton { x: root.margin + 1 * (root.key-width + root.gap); y: 480px; button-width: root.key-width; label: "2"; clicked => { root.button-pressed("2"); } }
+        CalcButton { x: root.margin + 2 * (root.key-width + root.gap); y: 480px; button-width: root.key-width; label: "3"; clicked => { root.button-pressed("3"); } }
+        CalcButton { x: root.margin + 3 * (root.key-width + root.gap); y: 480px; button-width: root.key-width; label: "+"; operation: true; active: root.active-operator == "+"; clicked => { root.button-pressed("+"); } }
+
+        CalcButton { x: root.margin + 0 * (root.key-width + root.gap); y: 542px; button-width: root.key-width; label: "+/-"; clicked => { root.button-pressed("+/-"); } }
+        CalcButton { x: root.margin + 1 * (root.key-width + root.gap); y: 542px; button-width: root.key-width; label: "0"; clicked => { root.button-pressed("0"); } }
+        CalcButton { x: root.margin + 2 * (root.key-width + root.gap); y: 542px; button-width: root.key-width; label: "."; clicked => { root.button-pressed("."); } }
+        CalcButton { x: root.margin + 3 * (root.key-width + root.gap); y: 542px; button-width: root.key-width; label: "="; equal: true; clicked => { root.button-pressed("="); } }
     }
 }
