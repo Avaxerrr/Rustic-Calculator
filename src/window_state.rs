@@ -15,8 +15,8 @@ const DEFAULT_WIDTH: f32 = 400.0;
 const DEFAULT_HEIGHT: f32 = 620.0;
 const MIN_WIDTH: f32 = 360.0;
 const MIN_HEIGHT: f32 = 560.0;
-const MAX_WIDTH: f32 = 760.0;
-const MAX_HEIGHT: f32 = 760.0;
+const MAX_WIDTH: f32 = 900.0;
+const MAX_HEIGHT: f32 = 1000.0;
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 struct WindowState {
