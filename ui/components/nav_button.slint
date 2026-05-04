@@ -1,0 +1,50 @@
+export component NavButton {
+    in property <string> label;
+    in property <bool> selected: false;
+    in property <bool> has-icon: false;
+    in property <image> icon-source;
+    callback clicked();
+
+    width: 300px;
+    height: 32px;
+
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+        border-radius: 4px;
+        background: root.selected ? #303030 : #202020;
+
+        touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.clicked(); } }
+
+        Rectangle {
+            x: 0px;
+            y: 6px;
+            width: 3px;
+            height: 20px;
+            border-radius: 2px;
+            background: root.selected ? #7dd3fc : #00000000;
+        }
+
+        if root.has-icon: Image {
+            x: 16px;
+            y: 8px;
+            width: 16px;
+            height: 16px;
+            source: root.icon-source;
+            image-fit: contain;
+        }
+
+        Text {
+            x: root.has-icon ? 42px : 16px;
+            width: parent.width - (root.has-icon ? 54px : 24px);
+            height: parent.height;
+            text: root.label;
+            color: root.selected || touch.has-hover ? #ffffff : #d8d8d8;
+            font-size: 13px;
+            font-family: "Inter";
+            font-weight: root.selected || touch.has-hover ? 600 : 500;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+    }
+}

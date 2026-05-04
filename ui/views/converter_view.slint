@@ -1,0 +1,97 @@
+import { KeyButton } from "../components/key_button.slint";
+import { TextDropdown } from "../components/text_dropdown.slint";
+
+export component ConverterView {
+    in property <length> margin;
+    in property <length> gap;
+    in property <length> converter-key-width;
+    in property <length> converter-wide-key-width;
+    in property <string> input-value;
+    in property <string> output-value;
+    in-out property <int> from-unit-index;
+    in-out property <int> to-unit-index;
+    in property <[string]> unit-options;
+    in property <string> relation-text;
+    callback converter-button-pressed(string);
+    callback from-unit-selected(string);
+    callback to-unit-selected(string);
+
+    property <length> preferred-keypad-y: 304px;
+    property <length> key-height: min(112px, max(40px, (root.height - root.preferred-keypad-y - root.margin - root.gap * 4) / 5));
+    property <length> keypad-y: root.height - root.margin - root.key-height * 5 - root.gap * 4;
+    property <length> key-step: root.key-height + root.gap;
+
+    x: 0px;
+    y: 50px;
+
+    Rectangle {
+        x: root.margin;
+        y: 8px;
+        width: root.width - root.margin * 2;
+        height: 106px;
+        border-radius: 6px;
+        border-width: 1px;
+        border-color: #7dd3fc;
+        background: #252525;
+
+        Text { x: 18px; y: 12px; width: parent.width - 36px; height: 42px; text: root.input-value; color: #ffffff; font-size: 32px; font-family: "Inter"; font-weight: 500; horizontal-alignment: left; vertical-alignment: center; overflow: elide; }
+        TextDropdown {
+            x: 18px;
+            y: 62px;
+            width: 156px;
+            height: 34px;
+            model: root.unit-options;
+            current-index <=> root.from-unit-index;
+            selected(value) => { root.from-unit-selected(value); }
+        }
+    }
+
+    Rectangle {
+        x: root.margin;
+        y: 124px;
+        width: root.width - root.margin * 2;
+        height: 106px;
+        border-radius: 6px;
+        border-width: 1px;
+        border-color: #3b3b3b;
+        background: #202020;
+
+        Text { x: 18px; y: 12px; width: parent.width - 36px; height: 42px; text: root.output-value; color: #ffffff; font-size: 32px; font-family: "Inter"; font-weight: 500; horizontal-alignment: left; vertical-alignment: center; overflow: elide; }
+        TextDropdown {
+            x: 18px;
+            y: 62px;
+            width: 156px;
+            height: 34px;
+            model: root.unit-options;
+            current-index <=> root.to-unit-index;
+            selected(value) => { root.to-unit-selected(value); }
+        }
+    }
+
+    Rectangle {
+        x: root.margin;
+        y: 244px;
+        width: root.width - root.margin * 2;
+        height: 40px;
+        border-radius: 6px;
+        background: #252525;
+
+        Text { x: 14px; width: 94px; height: parent.height; text: "Quick relation"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; vertical-alignment: center; }
+        Text { x: 112px; width: parent.width - 126px; height: parent.height; text: root.relation-text; color: #ffffff; font-size: 12px; font-family: "Inter"; font-weight: 600; horizontal-alignment: right; vertical-alignment: center; overflow: elide; }
+    }
+
+    KeyButton { x: root.margin; y: root.keypad-y + 0 * root.key-step; button-width: root.converter-wide-key-width; button-height: root.key-height; label: "CE"; utility: true; clicked => { root.converter-button-pressed("CE"); } }
+    KeyButton { x: root.margin + root.converter-wide-key-width + root.gap; y: root.keypad-y + 0 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "Back"; utility: true; clicked => { root.converter-button-pressed("Back"); } }
+    KeyButton { x: root.margin + 0 * (root.converter-key-width + root.gap); y: root.keypad-y + 1 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "7"; clicked => { root.converter-button-pressed("7"); } }
+    KeyButton { x: root.margin + 1 * (root.converter-key-width + root.gap); y: root.keypad-y + 1 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "8"; clicked => { root.converter-button-pressed("8"); } }
+    KeyButton { x: root.margin + 2 * (root.converter-key-width + root.gap); y: root.keypad-y + 1 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "9"; clicked => { root.converter-button-pressed("9"); } }
+    KeyButton { x: root.margin + 0 * (root.converter-key-width + root.gap); y: root.keypad-y + 2 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "4"; clicked => { root.converter-button-pressed("4"); } }
+    KeyButton { x: root.margin + 1 * (root.converter-key-width + root.gap); y: root.keypad-y + 2 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "5"; clicked => { root.converter-button-pressed("5"); } }
+    KeyButton { x: root.margin + 2 * (root.converter-key-width + root.gap); y: root.keypad-y + 2 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "6"; clicked => { root.converter-button-pressed("6"); } }
+    KeyButton { x: root.margin + 0 * (root.converter-key-width + root.gap); y: root.keypad-y + 3 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "1"; clicked => { root.converter-button-pressed("1"); } }
+    KeyButton { x: root.margin + 1 * (root.converter-key-width + root.gap); y: root.keypad-y + 3 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "2"; clicked => { root.converter-button-pressed("2"); } }
+    KeyButton { x: root.margin + 2 * (root.converter-key-width + root.gap); y: root.keypad-y + 3 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "3"; clicked => { root.converter-button-pressed("3"); } }
+    KeyButton { x: root.margin + 0 * (root.converter-key-width + root.gap); y: root.keypad-y + 4 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "+/-"; clicked => { root.converter-button-pressed("+/-"); } }
+    KeyButton { x: root.margin + 1 * (root.converter-key-width + root.gap); y: root.keypad-y + 4 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "0"; clicked => { root.converter-button-pressed("0"); } }
+    KeyButton { x: root.margin + 2 * (root.converter-key-width + root.gap); y: root.keypad-y + 4 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "."; clicked => { root.converter-button-pressed("."); } }
+}

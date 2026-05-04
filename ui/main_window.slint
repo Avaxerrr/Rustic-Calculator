@@ -1,802 +1,12 @@
 import "../assets/fonts/Inter-Variable.ttf";
+import { IconButton } from "components/icon_button.slint";
+import { CalculatorView } from "views/calculator_view.slint";
+import { ConverterView } from "views/converter_view.slint";
+import { ShortcutsView } from "views/shortcuts_view.slint";
+import { AboutView } from "views/about_view.slint";
+import { HistoryPanel } from "views/history_panel.slint";
+import { Sidebar } from "views/sidebar.slint";
 
-component IconButton {
-    in property <string> kind;
-    callback clicked();
-
-    width: 40px;
-    height: 36px;
-
-    Rectangle {
-        width: parent.width;
-        height: parent.height;
-        border-radius: 4px;
-        background: #00000000;
-
-        touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.clicked(); } }
-
-        if root.kind == "menu": Path {
-            x: 8px;
-            y: 8px;
-            width: 22px;
-            height: 16px;
-            commands: "M 0 1 L 22 1 M 0 8 L 22 8 M 0 15 L 22 15";
-            stroke: touch.pressed || touch.has-hover ? #ffffff : #d8d8d8;
-            stroke-width: 2px;
-            stroke-line-cap: square;
-            anti-alias: true;
-        }
-
-        if root.kind == "history": Path {
-            x: 8px;
-            y: 6px;
-            width: 24px;
-            height: 24px;
-            commands: "M 22 12 A 10 10 0 1 1 21.99 11.5 M 12 7 L 12 12 L 16.5 15";
-            stroke: touch.pressed || touch.has-hover ? #ffffff : #d8d8d8;
-            stroke-width: 2px;
-            stroke-line-cap: square;
-            stroke-line-join: miter;
-            fill: transparent;
-            anti-alias: true;
-        }
-    }
-}
-
-component BackspaceGlyph {
-    width: 40px;
-    height: 40px;
-
-    Path {
-        x: (parent.width - 20px) / 2;
-        y: (parent.height - 20px) / 2;
-        width: 20px;
-        height: 20px;
-        commands: "M 20 5 L 8 5 L 3 10 L 8 15 L 20 15 Z M 10 7.5 L 15 12.5 M 15 7.5 L 10 12.5";
-        stroke: #f2f2f2;
-        stroke-width: 2px;
-        stroke-line-cap: square;
-        stroke-line-join: miter;
-        fill: transparent;
-        anti-alias: true;
-    }
-}
-
-component MemoryButton {
-    in property <string> label;
-    in property <length> button-width;
-    in property <bool> enabled: false;
-    callback clicked();
-
-    width: root.button-width;
-    height: 32px;
-
-    Rectangle {
-        width: parent.width;
-        height: parent.height;
-        border-radius: 4px;
-        background: root.enabled ? (touch.pressed ? #343434 : touch.has-hover ? #2c2c2c : #202020) : #202020;
-
-        touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.clicked(); } }
-
-        Text {
-            text: root.label;
-            color: root.enabled ? #f2f2f2 : #7f7f7f;
-            font-size: 12px;
-            font-family: "Inter";
-            font-weight: 600;
-            horizontal-alignment: center;
-            vertical-alignment: center;
-            width: parent.width;
-            height: parent.height;
-        }
-    }
-}
-
-component KeyButton {
-    in property <string> label;
-    in property <length> button-width;
-    in property <length> button-height;
-    in property <bool> operation: false;
-    in property <bool> utility: false;
-    in property <bool> equal: false;
-    in property <bool> active: false;
-    property <bool> has-icon: root.label == "Back";
-    property <string> visual-label: root.label == "x" ? "×" : root.label == "/" ? "÷" : root.label == "sqrt" ? "√x" : root.label == "x^2" ? "x²" : root.label;
-    callback clicked();
-
-    width: root.button-width;
-    height: root.button-height;
-
-    Rectangle {
-        width: parent.width;
-        height: parent.height;
-        border-radius: 4px;
-        background: touch.pressed
-            ? (root.equal ? #6a6a6a : #464646)
-            : root.active
-                ? #4a4a4a
-                : touch.has-hover
-                    ? (root.equal ? #5b5b5b : root.operation || root.utility ? #383838 : #3b3b3b)
-                    : root.equal
-                        ? #515151
-                        : root.operation || root.utility
-                            ? #2b2b2b
-                            : #323232;
-        border-width: root.active ? 1px : 0px;
-        border-color: #767676;
-
-        touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.clicked(); } }
-
-        if !root.has-icon: Text {
-            text: root.visual-label;
-            color: #ffffff;
-            font-size: 18px;
-            font-family: "Inter";
-            font-weight: root.operation || root.utility ? 400 : 500;
-            horizontal-alignment: center;
-            vertical-alignment: center;
-            width: parent.width;
-            height: parent.height;
-        }
-
-        if root.label == "Back": BackspaceGlyph { width: parent.width; height: parent.height; }
-    }
-}
-
-component TextDropdown {
-    in property <[string]> model;
-    in-out property <int> current-index: 0;
-    callback selected(string);
-
-    width: 150px;
-    height: 34px;
-
-    property <string> current-value: root.current-index >= 0 && root.current-index < root.model.length ? root.model[root.current-index] : "";
-    property <int> visible-count: min(8, root.model.length);
-
-    Rectangle {
-        width: parent.width;
-        height: parent.height;
-        border-radius: 4px;
-        background: #00000000;
-
-        touch := TouchArea {
-            width: parent.width;
-            height: parent.height;
-            clicked => { popup.show(); }
-        }
-
-        HorizontalLayout {
-            x: 0px;
-            y: 0px;
-            width: root.width;
-            height: root.height;
-            spacing: 6px;
-            alignment: start;
-
-            Text {
-                max-width: root.width - 24px;
-                height: root.height;
-                text: root.current-value;
-                color: touch.pressed || touch.has-hover ? #ffffff : #d8d8d8;
-                font-size: 15px;
-                font-family: "Inter";
-                font-weight: 500;
-                vertical-alignment: center;
-                overflow: elide;
-            }
-
-            Text {
-                width: 16px;
-                height: root.height;
-                text: "⌄";
-                color: touch.pressed || touch.has-hover ? #ffffff : #a6a6a6;
-                font-size: 16px;
-                font-family: "Inter";
-                horizontal-alignment: center;
-                vertical-alignment: center;
-            }
-        }
-    }
-
-    popup := PopupWindow {
-        x: 0px;
-        y: root.height + 2px;
-        width: 240px;
-        height: root.visible-count * 32px + 8px;
-        close-policy: close-on-click-outside;
-
-        Rectangle {
-            width: parent.width;
-            height: parent.height;
-            border-radius: 6px;
-            border-width: 1px;
-            border-color: #3b3b3b;
-            background: #252525;
-
-            Flickable {
-                x: 4px;
-                y: 4px;
-                width: parent.width - 8px;
-                height: parent.height - 8px;
-                viewport-height: root.model.length * 32px;
-                interactive: root.model.length > root.visible-count;
-
-                for value[index] in root.model : Rectangle {
-                    y: index * 32px;
-                    width: parent.width;
-                    height: 32px;
-                    border-radius: 4px;
-                    background: #00000000;
-
-                    option-touch := TouchArea {
-                        width: parent.width;
-                        height: parent.height;
-                        clicked => {
-                            root.current-index = index;
-                            root.selected(value);
-                            popup.close();
-                        }
-                    }
-
-                    Text {
-                        x: 12px;
-                        width: parent.width - 20px;
-                        height: parent.height;
-                        text: value;
-                        color: index == root.current-index ? #7dd3fc : option-touch.has-hover ? #ffffff : #d8d8d8;
-                        font-size: 13px;
-                        font-family: "Inter";
-                        font-weight: index == root.current-index ? 700 : 500;
-                        vertical-alignment: center;
-                        overflow: elide;
-                    }
-                }
-            }
-        }
-    }
-}
-
-component NavButton {
-    in property <string> label;
-    in property <bool> selected: false;
-    in property <bool> has-icon: false;
-    in property <image> icon-source;
-    callback clicked();
-
-    width: 300px;
-    height: 32px;
-
-    Rectangle {
-        width: parent.width;
-        height: parent.height;
-        border-radius: 4px;
-        background: root.selected ? #303030 : #202020;
-
-        touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.clicked(); } }
-
-        Rectangle {
-            x: 0px;
-            y: 6px;
-            width: 3px;
-            height: 20px;
-            border-radius: 2px;
-            background: root.selected ? #7dd3fc : #00000000;
-        }
-
-        if root.has-icon: Image {
-            x: 16px;
-            y: 8px;
-            width: 16px;
-            height: 16px;
-            source: root.icon-source;
-            image-fit: contain;
-        }
-
-        Text {
-            x: root.has-icon ? 42px : 16px;
-            width: parent.width - (root.has-icon ? 54px : 24px);
-            height: parent.height;
-            text: root.label;
-            color: root.selected || touch.has-hover ? #ffffff : #d8d8d8;
-            font-size: 13px;
-            font-family: "Inter";
-            font-weight: root.selected || touch.has-hover ? 600 : 500;
-            vertical-alignment: center;
-            overflow: elide;
-        }
-    }
-}
-
-component CalculatorView {
-    in property <length> margin;
-    in property <length> display-margin;
-    in property <length> gap;
-    in property <length> key-width;
-    in property <length> memory-width;
-    in property <string> display-text;
-    in property <string> equation-text;
-    in property <string> active-operator;
-    in property <string> clear-label;
-    in property <int> display-font-size;
-    callback button-pressed(string);
-
-    property <length> memory-y: 144px;
-    property <length> keypad-y: 199px;
-    property <length> key-height: min(112px, max(48px, (root.height - root.keypad-y - root.margin - root.gap * 5) / 6));
-    property <length> key-step: root.key-height + root.gap;
-
-    x: 0px;
-    y: 50px;
-
-    Text {
-        x: root.display-margin;
-        y: 16px;
-        width: root.width - root.display-margin * 2;
-        height: 24px;
-        text: root.equation-text;
-        color: #a6a6a6;
-        font-size: 14px;
-        font-family: "Inter";
-        horizontal-alignment: right;
-        vertical-alignment: center;
-        overflow: elide;
-    }
-
-    Text {
-        x: root.display-margin;
-        y: 46px;
-        width: root.width - root.display-margin * 2;
-        height: 78px;
-        text: root.display-text;
-        color: #ffffff;
-        font-size: root.display-font-size * 1px;
-        font-family: "Inter";
-        font-weight: 500;
-        horizontal-alignment: right;
-        vertical-alignment: center;
-        overflow: elide;
-    }
-
-    MemoryButton { x: root.margin + 0 * (root.memory-width + root.gap); y: root.memory-y; button-width: root.memory-width; label: "MC"; clicked => { } }
-    MemoryButton { x: root.margin + 1 * (root.memory-width + root.gap); y: root.memory-y; button-width: root.memory-width; label: "MR"; clicked => { } }
-    MemoryButton { x: root.margin + 2 * (root.memory-width + root.gap); y: root.memory-y; button-width: root.memory-width; label: "M+"; enabled: true; clicked => { } }
-    MemoryButton { x: root.margin + 3 * (root.memory-width + root.gap); y: root.memory-y; button-width: root.memory-width; label: "M-"; enabled: true; clicked => { } }
-    MemoryButton { x: root.margin + 4 * (root.memory-width + root.gap); y: root.memory-y; button-width: root.memory-width; label: "MS"; enabled: true; clicked => { } }
-    MemoryButton { x: root.margin + 5 * (root.memory-width + root.gap); y: root.memory-y; button-width: root.memory-width; label: "M"; clicked => { } }
-
-    KeyButton { x: root.margin + 0 * (root.key-width + root.gap); y: root.keypad-y + 0 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "%"; operation: true; clicked => { root.button-pressed("%"); } }
-    KeyButton { x: root.margin + 1 * (root.key-width + root.gap); y: root.keypad-y + 0 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "CE"; operation: true; clicked => { root.button-pressed("CE"); } }
-    KeyButton { x: root.margin + 2 * (root.key-width + root.gap); y: root.keypad-y + 0 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: root.clear-label; operation: true; clicked => { root.button-pressed(root.clear-label); } }
-    KeyButton { x: root.margin + 3 * (root.key-width + root.gap); y: root.keypad-y + 0 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "Back"; operation: true; clicked => { root.button-pressed("Back"); } }
-
-    KeyButton { x: root.margin + 0 * (root.key-width + root.gap); y: root.keypad-y + 1 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "1/x"; operation: true; clicked => { } }
-    KeyButton { x: root.margin + 1 * (root.key-width + root.gap); y: root.keypad-y + 1 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "x^2"; operation: true; clicked => { } }
-    KeyButton { x: root.margin + 2 * (root.key-width + root.gap); y: root.keypad-y + 1 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "sqrt"; operation: true; clicked => { } }
-    KeyButton { x: root.margin + 3 * (root.key-width + root.gap); y: root.keypad-y + 1 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "/"; operation: true; active: root.active-operator == "/"; clicked => { root.button-pressed("/"); } }
-
-    KeyButton { x: root.margin + 0 * (root.key-width + root.gap); y: root.keypad-y + 2 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "7"; clicked => { root.button-pressed("7"); } }
-    KeyButton { x: root.margin + 1 * (root.key-width + root.gap); y: root.keypad-y + 2 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "8"; clicked => { root.button-pressed("8"); } }
-    KeyButton { x: root.margin + 2 * (root.key-width + root.gap); y: root.keypad-y + 2 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "9"; clicked => { root.button-pressed("9"); } }
-    KeyButton { x: root.margin + 3 * (root.key-width + root.gap); y: root.keypad-y + 2 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "x"; operation: true; active: root.active-operator == "x"; clicked => { root.button-pressed("x"); } }
-
-    KeyButton { x: root.margin + 0 * (root.key-width + root.gap); y: root.keypad-y + 3 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "4"; clicked => { root.button-pressed("4"); } }
-    KeyButton { x: root.margin + 1 * (root.key-width + root.gap); y: root.keypad-y + 3 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "5"; clicked => { root.button-pressed("5"); } }
-    KeyButton { x: root.margin + 2 * (root.key-width + root.gap); y: root.keypad-y + 3 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "6"; clicked => { root.button-pressed("6"); } }
-    KeyButton { x: root.margin + 3 * (root.key-width + root.gap); y: root.keypad-y + 3 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "-"; operation: true; active: root.active-operator == "-"; clicked => { root.button-pressed("-"); } }
-
-    KeyButton { x: root.margin + 0 * (root.key-width + root.gap); y: root.keypad-y + 4 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "1"; clicked => { root.button-pressed("1"); } }
-    KeyButton { x: root.margin + 1 * (root.key-width + root.gap); y: root.keypad-y + 4 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "2"; clicked => { root.button-pressed("2"); } }
-    KeyButton { x: root.margin + 2 * (root.key-width + root.gap); y: root.keypad-y + 4 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "3"; clicked => { root.button-pressed("3"); } }
-    KeyButton { x: root.margin + 3 * (root.key-width + root.gap); y: root.keypad-y + 4 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "+"; operation: true; active: root.active-operator == "+"; clicked => { root.button-pressed("+"); } }
-
-    KeyButton { x: root.margin + 0 * (root.key-width + root.gap); y: root.keypad-y + 5 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "+/-"; clicked => { root.button-pressed("+/-"); } }
-    KeyButton { x: root.margin + 1 * (root.key-width + root.gap); y: root.keypad-y + 5 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "0"; clicked => { root.button-pressed("0"); } }
-    KeyButton { x: root.margin + 2 * (root.key-width + root.gap); y: root.keypad-y + 5 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "."; clicked => { root.button-pressed("."); } }
-    KeyButton { x: root.margin + 3 * (root.key-width + root.gap); y: root.keypad-y + 5 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "="; equal: true; clicked => { root.button-pressed("="); } }
-}
-
-
-component ConverterView {
-    in property <length> margin;
-    in property <length> gap;
-    in property <length> converter-key-width;
-    in property <length> converter-wide-key-width;
-    in property <string> input-value;
-    in property <string> output-value;
-    in-out property <int> from-unit-index;
-    in-out property <int> to-unit-index;
-    in property <[string]> unit-options;
-    in property <string> relation-text;
-    callback converter-button-pressed(string);
-    callback from-unit-selected(string);
-    callback to-unit-selected(string);
-
-    property <length> preferred-keypad-y: 304px;
-    property <length> key-height: min(112px, max(40px, (root.height - root.preferred-keypad-y - root.margin - root.gap * 4) / 5));
-    property <length> keypad-y: root.height - root.margin - root.key-height * 5 - root.gap * 4;
-    property <length> key-step: root.key-height + root.gap;
-
-    x: 0px;
-    y: 50px;
-
-    Rectangle {
-        x: root.margin;
-        y: 8px;
-        width: root.width - root.margin * 2;
-        height: 106px;
-        border-radius: 6px;
-        border-width: 1px;
-        border-color: #7dd3fc;
-        background: #252525;
-
-        Text { x: 18px; y: 12px; width: parent.width - 36px; height: 42px; text: root.input-value; color: #ffffff; font-size: 32px; font-family: "Inter"; font-weight: 500; horizontal-alignment: left; vertical-alignment: center; overflow: elide; }
-        TextDropdown {
-            x: 18px;
-            y: 62px;
-            width: 156px;
-            height: 34px;
-            model: root.unit-options;
-            current-index <=> root.from-unit-index;
-            selected(value) => { root.from-unit-selected(value); }
-        }
-    }
-
-    Rectangle {
-        x: root.margin;
-        y: 124px;
-        width: root.width - root.margin * 2;
-        height: 106px;
-        border-radius: 6px;
-        border-width: 1px;
-        border-color: #3b3b3b;
-        background: #202020;
-
-        Text { x: 18px; y: 12px; width: parent.width - 36px; height: 42px; text: root.output-value; color: #ffffff; font-size: 32px; font-family: "Inter"; font-weight: 500; horizontal-alignment: left; vertical-alignment: center; overflow: elide; }
-        TextDropdown {
-            x: 18px;
-            y: 62px;
-            width: 156px;
-            height: 34px;
-            model: root.unit-options;
-            current-index <=> root.to-unit-index;
-            selected(value) => { root.to-unit-selected(value); }
-        }
-    }
-
-    Rectangle {
-        x: root.margin;
-        y: 244px;
-        width: root.width - root.margin * 2;
-        height: 40px;
-        border-radius: 6px;
-        background: #252525;
-
-        Text { x: 14px; width: 94px; height: parent.height; text: "Quick relation"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; vertical-alignment: center; }
-        Text { x: 112px; width: parent.width - 126px; height: parent.height; text: root.relation-text; color: #ffffff; font-size: 12px; font-family: "Inter"; font-weight: 600; horizontal-alignment: right; vertical-alignment: center; overflow: elide; }
-    }
-
-    KeyButton { x: root.margin; y: root.keypad-y + 0 * root.key-step; button-width: root.converter-wide-key-width; button-height: root.key-height; label: "CE"; utility: true; clicked => { root.converter-button-pressed("CE"); } }
-    KeyButton { x: root.margin + root.converter-wide-key-width + root.gap; y: root.keypad-y + 0 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "Back"; utility: true; clicked => { root.converter-button-pressed("Back"); } }
-    KeyButton { x: root.margin + 0 * (root.converter-key-width + root.gap); y: root.keypad-y + 1 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "7"; clicked => { root.converter-button-pressed("7"); } }
-    KeyButton { x: root.margin + 1 * (root.converter-key-width + root.gap); y: root.keypad-y + 1 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "8"; clicked => { root.converter-button-pressed("8"); } }
-    KeyButton { x: root.margin + 2 * (root.converter-key-width + root.gap); y: root.keypad-y + 1 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "9"; clicked => { root.converter-button-pressed("9"); } }
-    KeyButton { x: root.margin + 0 * (root.converter-key-width + root.gap); y: root.keypad-y + 2 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "4"; clicked => { root.converter-button-pressed("4"); } }
-    KeyButton { x: root.margin + 1 * (root.converter-key-width + root.gap); y: root.keypad-y + 2 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "5"; clicked => { root.converter-button-pressed("5"); } }
-    KeyButton { x: root.margin + 2 * (root.converter-key-width + root.gap); y: root.keypad-y + 2 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "6"; clicked => { root.converter-button-pressed("6"); } }
-    KeyButton { x: root.margin + 0 * (root.converter-key-width + root.gap); y: root.keypad-y + 3 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "1"; clicked => { root.converter-button-pressed("1"); } }
-    KeyButton { x: root.margin + 1 * (root.converter-key-width + root.gap); y: root.keypad-y + 3 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "2"; clicked => { root.converter-button-pressed("2"); } }
-    KeyButton { x: root.margin + 2 * (root.converter-key-width + root.gap); y: root.keypad-y + 3 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "3"; clicked => { root.converter-button-pressed("3"); } }
-    KeyButton { x: root.margin + 0 * (root.converter-key-width + root.gap); y: root.keypad-y + 4 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "+/-"; clicked => { root.converter-button-pressed("+/-"); } }
-    KeyButton { x: root.margin + 1 * (root.converter-key-width + root.gap); y: root.keypad-y + 4 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "0"; clicked => { root.converter-button-pressed("0"); } }
-    KeyButton { x: root.margin + 2 * (root.converter-key-width + root.gap); y: root.keypad-y + 4 * root.key-step; button-width: root.converter-key-width; button-height: root.key-height; label: "."; clicked => { root.converter-button-pressed("."); } }
-}
-
-component ShortcutRow {
-    in property <string> action;
-    in property <string> keys;
-    in property <length> row-width;
-
-    width: root.row-width;
-    height: 34px;
-
-    Rectangle {
-        width: parent.width;
-        height: parent.height;
-        border-radius: 4px;
-        background: #252525;
-
-        Text {
-            x: 14px;
-            width: parent.width - 132px;
-            height: parent.height;
-            text: root.action;
-            color: #d8d8d8;
-            font-size: 13px;
-            font-family: "Inter";
-            font-weight: 500;
-            vertical-alignment: center;
-            overflow: elide;
-        }
-
-        Text {
-            x: parent.width - 110px;
-            width: 96px;
-            height: parent.height;
-            text: root.keys;
-            color: #ffffff;
-            font-size: 12px;
-            font-family: "Inter";
-            font-weight: 700;
-            horizontal-alignment: right;
-            vertical-alignment: center;
-            overflow: elide;
-        }
-    }
-}
-
-component ShortcutsView {
-    in property <length> margin;
-
-    x: 0px;
-    y: 50px;
-
-    property <length> content-width: root.width - root.margin * 2;
-
-    Text {
-        x: root.margin;
-        y: 20px;
-        width: root.content-width;
-        height: 42px;
-        text: "Use these keys while the calculator or converter is focused.";
-        color: #a6a6a6;
-        font-size: 13px;
-        font-family: "Inter";
-        font-weight: 500;
-        wrap: word-wrap;
-        vertical-alignment: center;
-    }
-
-    Text { x: root.margin; y: 78px; width: root.content-width; height: 22px; text: "Calculator"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
-    ShortcutRow { x: root.margin; y: 106px; row-width: root.content-width; action: "Enter numbers"; keys: "0-9"; }
-    ShortcutRow { x: root.margin; y: 144px; row-width: root.content-width; action: "Decimal point"; keys: "."; }
-    ShortcutRow { x: root.margin; y: 182px; row-width: root.content-width; action: "Calculate result"; keys: "Enter / ="; }
-    ShortcutRow { x: root.margin; y: 220px; row-width: root.content-width; action: "Operators"; keys: "+ - * /"; }
-    ShortcutRow { x: root.margin; y: 258px; row-width: root.content-width; action: "Backspace"; keys: "Backspace"; }
-    ShortcutRow { x: root.margin; y: 296px; row-width: root.content-width; action: "Clear entry"; keys: "Delete"; }
-    ShortcutRow { x: root.margin; y: 334px; row-width: root.content-width; action: "Clear"; keys: "Esc"; }
-
-    Text { x: root.margin; y: 390px; width: root.content-width; height: 22px; text: "Converter"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
-    ShortcutRow { x: root.margin; y: 418px; row-width: root.content-width; action: "Enter value"; keys: "0-9"; }
-    ShortcutRow { x: root.margin; y: 456px; row-width: root.content-width; action: "Decimal point"; keys: "."; }
-    ShortcutRow { x: root.margin; y: 494px; row-width: root.content-width; action: "Delete digit"; keys: "Backspace"; }
-    ShortcutRow { x: root.margin; y: 532px; row-width: root.content-width; action: "Clear value"; keys: "Delete / Esc"; }
-}
-component AboutView {
-    in property <length> margin;
-
-    x: 0px;
-    y: 50px;
-
-    property <length> content-width: root.width - root.margin * 2;
-
-    Image {
-        x: root.margin;
-        y: 26px;
-        width: 56px;
-        height: 56px;
-        source: @image-url("../assets/calculator.png");
-        image-fit: contain;
-    }
-
-    Text {
-        x: root.margin;
-        y: 102px;
-        width: root.content-width;
-        height: 32px;
-        text: "Rustic Calculator";
-        color: #ffffff;
-        font-size: 24px;
-        font-family: "Inter";
-        font-weight: 700;
-        vertical-alignment: center;
-    }
-
-    Text {
-        x: root.margin;
-        y: 142px;
-        width: root.content-width;
-        height: 24px;
-        text: "Version 0.1.0";
-        color: #d8d8d8;
-        font-size: 14px;
-        font-family: "Inter";
-        font-weight: 600;
-        vertical-alignment: center;
-    }
-
-    Text {
-        x: root.margin;
-        y: 184px;
-        width: root.content-width;
-        height: 48px;
-        text: "A Rust and Slint calculator and converter app.";
-        color: #a6a6a6;
-        font-size: 14px;
-        font-family: "Inter";
-        font-weight: 500;
-        wrap: word-wrap;
-        vertical-alignment: center;
-    }
-
-    Rectangle {
-        x: root.margin;
-        y: 264px;
-        width: root.content-width;
-        height: 52px;
-        border-radius: 4px;
-        background: #252525;
-
-        Text {
-            x: 14px;
-            width: parent.width - 28px;
-            height: parent.height;
-            text: "Created by Avaxerrr";
-            color: #ffffff;
-            font-size: 14px;
-            font-family: "Inter";
-            font-weight: 700;
-            vertical-alignment: center;
-        }
-    }
-
-    Rectangle {
-        x: root.margin;
-        y: 336px;
-        width: root.content-width;
-        height: 76px;
-        border-radius: 4px;
-        background: #252525;
-
-        Text {
-            x: 14px;
-            y: 10px;
-            width: parent.width - 28px;
-            height: 22px;
-            text: "Icon credit";
-            color: #ffffff;
-            font-size: 13px;
-            font-family: "Inter";
-            font-weight: 700;
-            vertical-alignment: center;
-        }
-
-        Text {
-            x: 14px;
-            y: 34px;
-            width: parent.width - 28px;
-            height: 32px;
-            text: "Calculator icon by Apien from Flaticon.";
-            color: #a6a6a6;
-            font-size: 12px;
-            font-family: "Inter";
-            font-weight: 500;
-            wrap: word-wrap;
-            vertical-alignment: center;
-        }
-    }
-}
-component HistoryPanel {
-    in property <[string]> equations;
-    in property <[string]> results;
-    callback clear-history-requested();
-
-    Rectangle {
-        width: parent.width;
-        height: parent.height;
-        background: #202020;
-
-        Rectangle { x: 0px; width: 1px; height: parent.height; background: #303030; }
-
-        Text {
-            x: 20px;
-            y: 18px;
-            width: parent.width - 40px;
-            height: 30px;
-            text: "History";
-            color: #ffffff;
-            font-size: 18px;
-            font-family: "Inter";
-            font-weight: 700;
-            vertical-alignment: center;
-        }
-
-        if root.equations.length > 0: Rectangle {
-            x: 20px;
-            y: 54px;
-            width: 58px;
-            height: 30px;
-            border-radius: 4px;
-            background: clear-touch.pressed ? #3b3b3b : clear-touch.has-hover ? #303030 : #252525;
-
-            clear-touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.clear-history-requested(); } }
-
-            Text {
-                width: parent.width;
-                height: parent.height;
-                text: "Clear";
-                color: #ffffff;
-                font-size: 12px;
-                font-family: "Inter";
-                font-weight: 700;
-                horizontal-alignment: center;
-                vertical-alignment: center;
-            }
-        }
-
-        if root.equations.length == 0: Text {
-            x: 20px;
-            y: 62px;
-            width: parent.width - 40px;
-            height: 32px;
-            text: "There's no history yet.";
-            color: #d8d8d8;
-            font-size: 14px;
-            font-family: "Inter";
-            font-weight: 500;
-            vertical-alignment: center;
-        }
-
-        Flickable {
-            x: 12px;
-            y: 94px;
-            width: parent.width - 24px;
-            height: parent.height - 106px;
-            viewport-height: root.equations.length * 74px;
-            interactive: root.equations.length * 74px > self.height;
-
-            for equation[index] in root.equations : Rectangle {
-                y: index * 74px;
-                width: parent.width;
-                height: 68px;
-                border-radius: 4px;
-                background: item-touch.has-hover ? #252525 : #202020;
-
-                item-touch := TouchArea { width: parent.width; height: parent.height; }
-
-                Text {
-                    x: 12px;
-                    y: 8px;
-                    width: parent.width - 24px;
-                    height: 22px;
-                    text: equation;
-                    color: #a6a6a6;
-                    font-size: 12px;
-                    font-family: "Inter";
-                    horizontal-alignment: left;
-                    vertical-alignment: center;
-                    overflow: elide;
-                }
-
-                Text {
-                    x: 12px;
-                    y: 30px;
-                    width: parent.width - 24px;
-                    height: 30px;
-                    text: index < root.results.length ? root.results[index] : "";
-                    color: #ffffff;
-                    font-size: 24px;
-                    font-family: "Inter";
-                    font-weight: 500;
-                    horizontal-alignment: left;
-                    vertical-alignment: center;
-                    overflow: elide;
-                }
-            }
-        }
-    }
-}
 export component MainWindow inherits Window {
     in-out property <string> active-view: "calculator";
     in-out property <bool> sidebar-open: false;
@@ -858,13 +68,20 @@ export component MainWindow inherits Window {
 
     function toggle-history() {
         root.history-open = !root.history-open;
-        if root.history-open { root.width = max(root.window-width, root.default-width + root.history-panel-width); } else { root.width = min(root.window-width, root.default-width); }
+        if root.history-open {
+            root.width = max(root.window-width, root.default-width + root.history-panel-width);
+        } else {
+            root.width = min(root.window-width, root.default-width);
+        }
     }
 
     function collapse-history() {
-        if root.history-open { root.width = min(root.window-width, root.default-width); }
+        if root.history-open {
+            root.width = min(root.window-width, root.default-width);
+        }
         root.history-open = false;
     }
+
     function handle-key(event: KeyEvent) -> EventResult {
         if root.active-view == "calculator" {
             if event.text == "0" { root.button-pressed("0"); return accept; }
@@ -923,142 +140,121 @@ export component MainWindow inherits Window {
                 }
 
                 Rectangle {
-            width: parent.width;
-            height: parent.height;
-            background: #202020;
-
-            IconButton { x: root.toolbar-margin; y: 8px; kind: "menu"; clicked => { root.sidebar-open = !root.sidebar-open; } }
-
-            Text {
-                x: 56px;
-                y: 8px;
-                width: root.content-width - 128px;
-                height: 36px;
-                text: root.active-view == "calculator" ? "Standard" : root.active-view == "converter" ? root.category-title : root.active-view == "about" ? "About" : "Keyboard shortcuts";
-                color: #ffffff;
-                font-size: 19px;
-                font-family: "Inter";
-                font-weight: 600;
-                vertical-alignment: center;
-                overflow: elide;
-            }
-
-            if root.active-view == "calculator": IconButton { x: root.content-width - root.toolbar-margin - 40px; y: 8px; kind: "history"; clicked => { root.toggle-history(); } }
-
-            if root.active-view == "converter": Rectangle {
-                x: root.window-width - root.toolbar-margin - 64px;
-                y: 11px;
-                width: 64px;
-                height: 30px;
-                border-radius: 4px;
-                background: swap-touch.pressed ? #5b5b5b : swap-touch.has-hover ? #4a4a4a : #323232;
-
-                swap-touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.swap-units-pressed(); } }
-
-                Text {
                     width: parent.width;
                     height: parent.height;
-                    text: "Swap";
-                    color: #ffffff;
-                    font-size: 12px;
-                    font-family: "Inter";
-                    font-weight: 700;
-                    horizontal-alignment: center;
-                    vertical-alignment: center;
-                }
-            }
+                    background: #202020;
 
-            if root.active-view == "calculator": CalculatorView {
-                width: root.content-width;
-                height: parent.height - 50px;
-                margin: root.margin;
-                display-margin: root.display-margin;
-                gap: root.gap;
-                key-width: root.key-width;
-                memory-width: root.memory-width;
-                display-text: root.display-text;
-                equation-text: root.equation-text;
-                active-operator: root.active-operator;
-                clear-label: root.clear-label;
-                display-font-size: root.display-font-size;
-                button-pressed(label) => { root.button-pressed(label); }
-            }
-            if root.active-view == "calculator" && root.history-open: HistoryPanel {
-                x: root.content-width;
-                y: 0px;
-                width: root.history-panel-width;
-                height: parent.height;
-                equations: root.history-equations;
-                results: root.history-results;
-                clear-history-requested => { root.clear-history-requested(); }
-            }
-            if root.active-view == "shortcuts": ShortcutsView {
-                width: root.content-width;
-                height: parent.height - 50px;
-                margin: root.margin;
-            }
-            if root.active-view == "about": AboutView {
-                width: root.content-width;
-                height: parent.height - 50px;
-                margin: root.margin;
-            }
-            if root.active-view == "converter": ConverterView {
-                width: parent.width;
-                height: parent.height - 50px;
-                margin: root.margin;
-                gap: root.gap;
-                converter-key-width: root.converter-key-width;
-                converter-wide-key-width: root.converter-wide-key-width;
-                input-value: root.input-value;
-                output-value: root.output-value;
-                from-unit-index <=> root.from-unit-index;
-                to-unit-index <=> root.to-unit-index;
-                unit-options: root.unit-options;
-                relation-text: root.relation-text;
-                converter-button-pressed(label) => { root.converter-button-pressed(label); }
-                from-unit-selected(value) => { root.from-unit-selected(value); }
-                to-unit-selected(value) => { root.to-unit-selected(value); }
-            }
+                    IconButton { x: root.toolbar-margin; y: 8px; kind: "menu"; clicked => { root.sidebar-open = !root.sidebar-open; } }
 
-            if root.sidebar-open: Rectangle {
-                x: 0px;
-                y: 0px;
-                width: root.window-width < 324px ? root.window-width : 324px;
-                height: root.height;
-                background: #202020;
-                border-width: 1px;
-                border-color: #303030;
+                    Text {
+                        x: 56px;
+                        y: 8px;
+                        width: root.content-width - 128px;
+                        height: 36px;
+                        text: root.active-view == "calculator" ? "Standard" : root.active-view == "converter" ? root.category-title : root.active-view == "about" ? "About" : "Keyboard shortcuts";
+                        color: #ffffff;
+                        font-size: 19px;
+                        font-family: "Inter";
+                        font-weight: 600;
+                        vertical-alignment: center;
+                        overflow: elide;
+                    }
 
-                Flickable {
-                    width: parent.width;
-                    height: parent.height;
-                    viewport-height: 568px;
-                    interactive: self.viewport-height > self.height;
+                    if root.active-view == "calculator": IconButton { x: root.content-width - root.toolbar-margin - 40px; y: 8px; kind: "history"; clicked => { root.toggle-history(); } }
 
-                    NavButton { x: 10px; y: 18px; label: "Standard"; has-icon: true; icon-source: @image-url("../assets/calculator.png"); selected: root.active-view == "calculator"; clicked => { root.standard-selected(); } }
+                    if root.active-view == "converter": Rectangle {
+                        x: root.window-width - root.toolbar-margin - 64px;
+                        y: 11px;
+                        width: 64px;
+                        height: 30px;
+                        border-radius: 4px;
+                        background: swap-touch.pressed ? #5b5b5b : swap-touch.has-hover ? #4a4a4a : #323232;
 
-                    Text { x: 18px; y: 66px; width: parent.width - 36px; height: 24px; text: "Converter"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
-                    NavButton { x: 10px; y: 94px; label: "Volume"; has-icon: true; icon-source: @image-url("../assets/icons/volume.svg"); selected: root.active-view == "converter" && root.category-title == "Volume"; clicked => { root.collapse-history(); root.category-selected("Volume"); } }
-                    NavButton { x: 10px; y: 124px; label: "Length"; has-icon: true; icon-source: @image-url("../assets/icons/length.svg"); selected: root.active-view == "converter" && root.category-title == "Length"; clicked => { root.collapse-history(); root.category-selected("Length"); } }
-                    NavButton { x: 10px; y: 154px; label: "Weight and mass"; has-icon: true; icon-source: @image-url("../assets/icons/weight-mass.svg"); selected: root.active-view == "converter" && root.category-title == "Weight and mass"; clicked => { root.collapse-history(); root.category-selected("Weight and mass"); } }
-                    NavButton { x: 10px; y: 184px; label: "Temperature"; has-icon: true; icon-source: @image-url("../assets/icons/temperature.svg"); selected: root.active-view == "converter" && root.category-title == "Temperature"; clicked => { root.collapse-history(); root.category-selected("Temperature"); } }
-                    NavButton { x: 10px; y: 214px; label: "Energy"; has-icon: true; icon-source: @image-url("../assets/icons/energy.svg"); selected: root.active-view == "converter" && root.category-title == "Energy"; clicked => { root.collapse-history(); root.category-selected("Energy"); } }
-                    NavButton { x: 10px; y: 244px; label: "Area"; has-icon: true; icon-source: @image-url("../assets/icons/area.svg"); selected: root.active-view == "converter" && root.category-title == "Area"; clicked => { root.collapse-history(); root.category-selected("Area"); } }
-                    NavButton { x: 10px; y: 274px; label: "Speed"; has-icon: true; icon-source: @image-url("../assets/icons/speed.svg"); selected: root.active-view == "converter" && root.category-title == "Speed"; clicked => { root.collapse-history(); root.category-selected("Speed"); } }
-                    NavButton { x: 10px; y: 304px; label: "Time"; has-icon: true; icon-source: @image-url("../assets/icons/time.svg"); selected: root.active-view == "converter" && root.category-title == "Time"; clicked => { root.collapse-history(); root.category-selected("Time"); } }
-                    NavButton { x: 10px; y: 334px; label: "Power"; has-icon: true; icon-source: @image-url("../assets/icons/power.svg"); selected: root.active-view == "converter" && root.category-title == "Power"; clicked => { root.collapse-history(); root.category-selected("Power"); } }
-                    NavButton { x: 10px; y: 364px; label: "Data"; has-icon: true; icon-source: @image-url("../assets/icons/data.svg"); selected: root.active-view == "converter" && root.category-title == "Data"; clicked => { root.collapse-history(); root.category-selected("Data"); } }
-                    NavButton { x: 10px; y: 394px; label: "Pressure"; has-icon: true; icon-source: @image-url("../assets/icons/pressure.svg"); selected: root.active-view == "converter" && root.category-title == "Pressure"; clicked => { root.collapse-history(); root.category-selected("Pressure"); } }
-                    NavButton { x: 10px; y: 424px; label: "Angle"; has-icon: true; icon-source: @image-url("../assets/icons/angle.svg"); selected: root.active-view == "converter" && root.category-title == "Angle"; clicked => { root.collapse-history(); root.category-selected("Angle"); } }
+                        swap-touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.swap-units-pressed(); } }
 
-                    Text { x: 18px; y: 464px; width: parent.width - 36px; height: 24px; text: "Help"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
-                    NavButton { x: 10px; y: 494px; label: "Keyboard shortcuts"; has-icon: true; icon-source: @image-url("../assets/icons/keyboard.svg"); selected: root.active-view == "shortcuts"; clicked => { root.collapse-history(); root.shortcuts-selected(); } }
-                    NavButton { x: 10px; y: 526px; label: "About"; has-icon: true; icon-source: @image-url("../assets/icons/info.svg"); selected: root.active-view == "about"; clicked => { root.collapse-history(); root.active-view = "about"; root.sidebar-open = false; } }
+                        Text {
+                            width: parent.width;
+                            height: parent.height;
+                            text: "Swap";
+                            color: #ffffff;
+                            font-size: 12px;
+                            font-family: "Inter";
+                            font-weight: 700;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                        }
+                    }
+                    if root.active-view == "calculator": CalculatorView {
+                        width: root.content-width;
+                        height: parent.height - 50px;
+                        margin: root.margin;
+                        display-margin: root.display-margin;
+                        gap: root.gap;
+                        key-width: root.key-width;
+                        memory-width: root.memory-width;
+                        display-text: root.display-text;
+                        equation-text: root.equation-text;
+                        active-operator: root.active-operator;
+                        clear-label: root.clear-label;
+                        display-font-size: root.display-font-size;
+                        button-pressed(label) => { root.button-pressed(label); }
+                    }
+
+                    if root.active-view == "calculator" && root.history-open: HistoryPanel {
+                        x: root.content-width;
+                        y: 0px;
+                        width: root.history-panel-width;
+                        height: parent.height;
+                        equations: root.history-equations;
+                        results: root.history-results;
+                        clear-history-requested => { root.clear-history-requested(); }
+                    }
+
+                    if root.active-view == "converter": ConverterView {
+                        width: parent.width;
+                        height: parent.height - 50px;
+                        margin: root.margin;
+                        gap: root.gap;
+                        converter-key-width: root.converter-key-width;
+                        converter-wide-key-width: root.converter-wide-key-width;
+                        input-value: root.input-value;
+                        output-value: root.output-value;
+                        from-unit-index <=> root.from-unit-index;
+                        to-unit-index <=> root.to-unit-index;
+                        unit-options: root.unit-options;
+                        relation-text: root.relation-text;
+                        converter-button-pressed(label) => { root.converter-button-pressed(label); }
+                        from-unit-selected(value) => { root.from-unit-selected(value); }
+                        to-unit-selected(value) => { root.to-unit-selected(value); }
+                    }
+
+                    if root.active-view == "shortcuts": ShortcutsView {
+                        width: root.content-width;
+                        height: parent.height - 50px;
+                        margin: root.margin;
+                    }
+
+                    if root.active-view == "about": AboutView {
+                        width: root.content-width;
+                        height: parent.height - 50px;
+                        margin: root.margin;
+                    }
+
+                    if root.sidebar-open: Sidebar {
+                        x: 0px;
+                        y: 0px;
+                        width: root.window-width < 324px ? root.window-width : 324px;
+                        height: root.height;
+                        active-view: root.active-view;
+                        category-title: root.category-title;
+                        standard-selected => { root.standard-selected(); }
+                        category-selected(category) => { root.collapse-history(); root.category-selected(category); }
+                        shortcuts-selected => { root.collapse-history(); root.shortcuts-selected(); }
+                        about-selected => { root.collapse-history(); root.active-view = "about"; root.sidebar-open = false; }
+                    }
                 }
             }
         }
-    }
-    }
     }
 
     init => {

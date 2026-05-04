@@ -1,0 +1,30 @@
+export component MemoryButton {
+    in property <string> label;
+    in property <length> button-width;
+    in property <bool> enabled: false;
+    callback clicked();
+
+    width: root.button-width;
+    height: 32px;
+
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+        border-radius: 4px;
+        background: root.enabled ? (touch.pressed ? #343434 : touch.has-hover ? #2c2c2c : #202020) : #202020;
+
+        touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.clicked(); } }
+
+        Text {
+            text: root.label;
+            color: root.enabled ? #f2f2f2 : #7f7f7f;
+            font-size: 12px;
+            font-family: "Inter";
+            font-weight: 600;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            width: parent.width;
+            height: parent.height;
+        }
+    }
+}

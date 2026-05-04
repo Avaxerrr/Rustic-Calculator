@@ -1,0 +1,71 @@
+component BackspaceGlyph {
+    width: 40px;
+    height: 40px;
+
+    Path {
+        x: (parent.width - 20px) / 2;
+        y: (parent.height - 20px) / 2;
+        width: 20px;
+        height: 20px;
+        commands: "M 20 5 L 8 5 L 3 10 L 8 15 L 20 15 Z M 10 7.5 L 15 12.5 M 15 7.5 L 10 12.5";
+        stroke: #f2f2f2;
+        stroke-width: 2px;
+        stroke-line-cap: square;
+        stroke-line-join: miter;
+        fill: transparent;
+        anti-alias: true;
+    }
+}
+
+
+
+export component KeyButton {
+    in property <string> label;
+    in property <length> button-width;
+    in property <length> button-height;
+    in property <bool> operation: false;
+    in property <bool> utility: false;
+    in property <bool> equal: false;
+    in property <bool> active: false;
+    property <bool> has-icon: root.label == "Back";
+    property <string> visual-label: root.label == "x" ? "×" : root.label == "/" ? "÷" : root.label == "sqrt" ? "√x" : root.label == "x^2" ? "x²" : root.label;
+    callback clicked();
+
+    width: root.button-width;
+    height: root.button-height;
+
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+        border-radius: 4px;
+        background: touch.pressed
+            ? (root.equal ? #6a6a6a : #464646)
+            : root.active
+                ? #4a4a4a
+                : touch.has-hover
+                    ? (root.equal ? #5b5b5b : root.operation || root.utility ? #383838 : #3b3b3b)
+                    : root.equal
+                        ? #515151
+                        : root.operation || root.utility
+                            ? #2b2b2b
+                            : #323232;
+        border-width: root.active ? 1px : 0px;
+        border-color: #767676;
+
+        touch := TouchArea { width: parent.width; height: parent.height; clicked => { root.clicked(); } }
+
+        if !root.has-icon: Text {
+            text: root.visual-label;
+            color: #ffffff;
+            font-size: 18px;
+            font-family: "Inter";
+            font-weight: root.operation || root.utility ? 400 : 500;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            width: parent.width;
+            height: parent.height;
+        }
+
+        if root.label == "Back": BackspaceGlyph { width: parent.width; height: parent.height; }
+    }
+}

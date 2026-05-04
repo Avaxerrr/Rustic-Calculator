@@ -1,0 +1,90 @@
+import { MemoryButton } from "../components/memory_button.slint";
+import { KeyButton } from "../components/key_button.slint";
+
+export component CalculatorView {
+    in property <length> margin;
+    in property <length> display-margin;
+    in property <length> gap;
+    in property <length> key-width;
+    in property <length> memory-width;
+    in property <string> display-text;
+    in property <string> equation-text;
+    in property <string> active-operator;
+    in property <string> clear-label;
+    in property <int> display-font-size;
+    callback button-pressed(string);
+
+    property <length> memory-y: 144px;
+    property <length> keypad-y: 199px;
+    property <length> key-height: min(112px, max(48px, (root.height - root.keypad-y - root.margin - root.gap * 5) / 6));
+    property <length> key-step: root.key-height + root.gap;
+
+    x: 0px;
+    y: 50px;
+
+    Text {
+        x: root.display-margin;
+        y: 16px;
+        width: root.width - root.display-margin * 2;
+        height: 24px;
+        text: root.equation-text;
+        color: #a6a6a6;
+        font-size: 14px;
+        font-family: "Inter";
+        horizontal-alignment: right;
+        vertical-alignment: center;
+        overflow: elide;
+    }
+
+    Text {
+        x: root.display-margin;
+        y: 46px;
+        width: root.width - root.display-margin * 2;
+        height: 78px;
+        text: root.display-text;
+        color: #ffffff;
+        font-size: root.display-font-size * 1px;
+        font-family: "Inter";
+        font-weight: 500;
+        horizontal-alignment: right;
+        vertical-alignment: center;
+        overflow: elide;
+    }
+
+    MemoryButton { x: root.margin + 0 * (root.memory-width + root.gap); y: root.memory-y; button-width: root.memory-width; label: "MC"; clicked => { } }
+    MemoryButton { x: root.margin + 1 * (root.memory-width + root.gap); y: root.memory-y; button-width: root.memory-width; label: "MR"; clicked => { } }
+    MemoryButton { x: root.margin + 2 * (root.memory-width + root.gap); y: root.memory-y; button-width: root.memory-width; label: "M+"; enabled: true; clicked => { } }
+    MemoryButton { x: root.margin + 3 * (root.memory-width + root.gap); y: root.memory-y; button-width: root.memory-width; label: "M-"; enabled: true; clicked => { } }
+    MemoryButton { x: root.margin + 4 * (root.memory-width + root.gap); y: root.memory-y; button-width: root.memory-width; label: "MS"; enabled: true; clicked => { } }
+    MemoryButton { x: root.margin + 5 * (root.memory-width + root.gap); y: root.memory-y; button-width: root.memory-width; label: "M"; clicked => { } }
+
+    KeyButton { x: root.margin + 0 * (root.key-width + root.gap); y: root.keypad-y + 0 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "%"; operation: true; clicked => { root.button-pressed("%"); } }
+    KeyButton { x: root.margin + 1 * (root.key-width + root.gap); y: root.keypad-y + 0 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "CE"; operation: true; clicked => { root.button-pressed("CE"); } }
+    KeyButton { x: root.margin + 2 * (root.key-width + root.gap); y: root.keypad-y + 0 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: root.clear-label; operation: true; clicked => { root.button-pressed(root.clear-label); } }
+    KeyButton { x: root.margin + 3 * (root.key-width + root.gap); y: root.keypad-y + 0 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "Back"; operation: true; clicked => { root.button-pressed("Back"); } }
+
+    KeyButton { x: root.margin + 0 * (root.key-width + root.gap); y: root.keypad-y + 1 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "1/x"; operation: true; clicked => { } }
+    KeyButton { x: root.margin + 1 * (root.key-width + root.gap); y: root.keypad-y + 1 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "x^2"; operation: true; clicked => { } }
+    KeyButton { x: root.margin + 2 * (root.key-width + root.gap); y: root.keypad-y + 1 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "sqrt"; operation: true; clicked => { } }
+    KeyButton { x: root.margin + 3 * (root.key-width + root.gap); y: root.keypad-y + 1 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "/"; operation: true; active: root.active-operator == "/"; clicked => { root.button-pressed("/"); } }
+
+    KeyButton { x: root.margin + 0 * (root.key-width + root.gap); y: root.keypad-y + 2 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "7"; clicked => { root.button-pressed("7"); } }
+    KeyButton { x: root.margin + 1 * (root.key-width + root.gap); y: root.keypad-y + 2 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "8"; clicked => { root.button-pressed("8"); } }
+    KeyButton { x: root.margin + 2 * (root.key-width + root.gap); y: root.keypad-y + 2 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "9"; clicked => { root.button-pressed("9"); } }
+    KeyButton { x: root.margin + 3 * (root.key-width + root.gap); y: root.keypad-y + 2 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "x"; operation: true; active: root.active-operator == "x"; clicked => { root.button-pressed("x"); } }
+
+    KeyButton { x: root.margin + 0 * (root.key-width + root.gap); y: root.keypad-y + 3 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "4"; clicked => { root.button-pressed("4"); } }
+    KeyButton { x: root.margin + 1 * (root.key-width + root.gap); y: root.keypad-y + 3 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "5"; clicked => { root.button-pressed("5"); } }
+    KeyButton { x: root.margin + 2 * (root.key-width + root.gap); y: root.keypad-y + 3 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "6"; clicked => { root.button-pressed("6"); } }
+    KeyButton { x: root.margin + 3 * (root.key-width + root.gap); y: root.keypad-y + 3 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "-"; operation: true; active: root.active-operator == "-"; clicked => { root.button-pressed("-"); } }
+
+    KeyButton { x: root.margin + 0 * (root.key-width + root.gap); y: root.keypad-y + 4 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "1"; clicked => { root.button-pressed("1"); } }
+    KeyButton { x: root.margin + 1 * (root.key-width + root.gap); y: root.keypad-y + 4 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "2"; clicked => { root.button-pressed("2"); } }
+    KeyButton { x: root.margin + 2 * (root.key-width + root.gap); y: root.keypad-y + 4 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "3"; clicked => { root.button-pressed("3"); } }
+    KeyButton { x: root.margin + 3 * (root.key-width + root.gap); y: root.keypad-y + 4 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "+"; operation: true; active: root.active-operator == "+"; clicked => { root.button-pressed("+"); } }
+
+    KeyButton { x: root.margin + 0 * (root.key-width + root.gap); y: root.keypad-y + 5 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "+/-"; clicked => { root.button-pressed("+/-"); } }
+    KeyButton { x: root.margin + 1 * (root.key-width + root.gap); y: root.keypad-y + 5 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "0"; clicked => { root.button-pressed("0"); } }
+    KeyButton { x: root.margin + 2 * (root.key-width + root.gap); y: root.keypad-y + 5 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "."; clicked => { root.button-pressed("."); } }
+    KeyButton { x: root.margin + 3 * (root.key-width + root.gap); y: root.keypad-y + 5 * root.key-step; button-width: root.key-width; button-height: root.key-height; label: "="; equal: true; clicked => { root.button-pressed("="); } }
+}
