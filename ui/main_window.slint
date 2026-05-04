@@ -1,0 +1,84 @@
+﻿import { Button } from "std-widgets.slint";
+
+component CalculatorButton inherits Button {
+    in property <string> label;
+
+    text: label;
+    min-height: 48px;
+}
+
+export component MainWindow inherits Window {
+    in property <string> display-text: "0";
+    callback button-pressed(string);
+
+    title: "Rustic Calculator";
+    width: 320px;
+    height: 440px;
+
+    VerticalLayout {
+        padding: 16px;
+        spacing: 8px;
+
+        Rectangle {
+            height: 84px;
+            border-radius: 6px;
+            background: #20242c;
+
+            Text {
+                text: root.display-text;
+                color: white;
+                font-size: 36px;
+                horizontal-alignment: right;
+                vertical-alignment: center;
+                overflow: elide;
+                x: 12px;
+                width: parent.width - 24px;
+                height: parent.height;
+            }
+        }
+
+        HorizontalLayout {
+            spacing: 8px;
+
+            CalculatorButton { label: "C"; clicked => { root.button-pressed("C"); } }
+            CalculatorButton { label: "Back"; clicked => { root.button-pressed("Back"); } }
+            CalculatorButton { label: "+/-"; clicked => { root.button-pressed("+/-"); } }
+            CalculatorButton { label: "/"; clicked => { root.button-pressed("/"); } }
+        }
+
+        HorizontalLayout {
+            spacing: 8px;
+
+            CalculatorButton { label: "7"; clicked => { root.button-pressed("7"); } }
+            CalculatorButton { label: "8"; clicked => { root.button-pressed("8"); } }
+            CalculatorButton { label: "9"; clicked => { root.button-pressed("9"); } }
+            CalculatorButton { label: "x"; clicked => { root.button-pressed("x"); } }
+        }
+
+        HorizontalLayout {
+            spacing: 8px;
+
+            CalculatorButton { label: "4"; clicked => { root.button-pressed("4"); } }
+            CalculatorButton { label: "5"; clicked => { root.button-pressed("5"); } }
+            CalculatorButton { label: "6"; clicked => { root.button-pressed("6"); } }
+            CalculatorButton { label: "-"; clicked => { root.button-pressed("-"); } }
+        }
+
+        HorizontalLayout {
+            spacing: 8px;
+
+            CalculatorButton { label: "1"; clicked => { root.button-pressed("1"); } }
+            CalculatorButton { label: "2"; clicked => { root.button-pressed("2"); } }
+            CalculatorButton { label: "3"; clicked => { root.button-pressed("3"); } }
+            CalculatorButton { label: "+"; clicked => { root.button-pressed("+"); } }
+        }
+
+        HorizontalLayout {
+            spacing: 8px;
+
+            CalculatorButton { label: "0"; clicked => { root.button-pressed("0"); } }
+            CalculatorButton { label: "."; clicked => { root.button-pressed("."); } }
+            CalculatorButton { label: "="; clicked => { root.button-pressed("="); } }
+        }
+    }
+}
