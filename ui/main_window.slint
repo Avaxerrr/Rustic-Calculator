@@ -199,29 +199,36 @@ component TextDropdown {
             clicked => { popup.show(); }
         }
 
-        Text {
+        HorizontalLayout {
             x: 0px;
-            width: root.width - 20px;
+            y: 0px;
+            width: root.width;
             height: root.height;
-            text: root.current-value;
-            color: touch.pressed || touch.has-hover ? #ffffff : #d8d8d8;
-            font-size: 15px;
-            font-family: "Inter";
-            font-weight: 500;
-            vertical-alignment: center;
-            overflow: elide;
-        }
+            spacing: 6px;
+            alignment: start;
 
-        Text {
-            x: root.width - 18px;
-            width: 18px;
-            height: root.height;
-            text: "⌄";
-            color: touch.pressed || touch.has-hover ? #ffffff : #a6a6a6;
-            font-size: 16px;
-            font-family: "Inter";
-            horizontal-alignment: center;
-            vertical-alignment: center;
+            Text {
+                max-width: root.width - 24px;
+                height: root.height;
+                text: root.current-value;
+                color: touch.pressed || touch.has-hover ? #ffffff : #d8d8d8;
+                font-size: 15px;
+                font-family: "Inter";
+                font-weight: 500;
+                vertical-alignment: center;
+                overflow: elide;
+            }
+
+            Text {
+                width: 16px;
+                height: root.height;
+                text: "⌄";
+                color: touch.pressed || touch.has-hover ? #ffffff : #a6a6a6;
+                font-size: 16px;
+                font-family: "Inter";
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
         }
     }
 
