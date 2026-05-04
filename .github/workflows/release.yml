@@ -44,10 +44,34 @@ jobs:
           path: dist/*.zip
           if-no-files-found: error
 
-      - name: Create GitHub release
+      - name: Create or update GitHub release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ github.ref_name }}"
-          gh release create $tag dist/*.zip --title "Rustic Calculator $tag" --notes "Windows x64 release build for Rustic Calculator $tag."
+          $title = "Rustic Calculator $tag"
+          $notes = @"
+          ## Rustic Calculator $tag
+
+          Windows x64 release build for Rustic Calculator.
+
+          ### Highlights
+          - Standard calculator with keyboard input and calculation history.
+          - Unit converters for volume, length, weight and mass, temperature, energy, area, speed, time, power, data, pressure, and angle.
+          - Dark Windows-style desktop UI.
+          - Persistent window size and position.
+
+          ### Download
+          Download `rustic-calculator-$tag-windows-x64.zip`, extract it, and run `rustic-calculator.exe`.
+          "@
+
+          $notesPath = "dist/release-notes.md"
+          $notes | Set-Content -Path $notesPath -Encoding UTF8
+
+          if (gh release view $tag *> $null) {
+            gh release edit $tag --title $title --notes-file $notesPath
+            gh release upload $tag dist/*.zip --clobber
+          } else {
+            gh release create $tag dist/*.zip --title $title --notes-file $notesPath
+          }
