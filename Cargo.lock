@@ -3836,8 +3836,6 @@ dependencies = [
 name = "rustic-calculator"
 version = "0.1.0"
 dependencies = [
- "serde",
- "serde_json",
  "slint",
  "slint-build",
  "windows-sys 0.61.2",

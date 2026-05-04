@@ -1,27 +1,17 @@
 #[cfg(target_os = "windows")]
 mod windows_title_bar {
-    use std::sync::atomic::{AtomicIsize, Ordering};
     use std::thread;
     use std::time::Duration;
 
-    use windows_sys::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
+    use windows_sys::Win32::Foundation::HWND;
     use windows_sys::Win32::Graphics::Dwm::{
-        DwmSetWindowAttribute, DWMWA_CAPTION_COLOR, DWMWA_TEXT_COLOR, DWMWA_USE_IMMERSIVE_DARK_MODE,
+        DWMWA_CAPTION_COLOR, DWMWA_TEXT_COLOR, DWMWA_USE_IMMERSIVE_DARK_MODE, DwmSetWindowAttribute,
     };
     use windows_sys::Win32::System::Threading::GetCurrentProcessId;
-    use windows_sys::Win32::UI::WindowsAndMessaging::{
-        CallWindowProcW, FindWindowW, GetWindowThreadProcessId, SetWindowLongPtrW, GWLP_WNDPROC,
-        MINMAXINFO, WM_GETMINMAXINFO, WNDPROC,
-    };
+    use windows_sys::Win32::UI::WindowsAndMessaging::{FindWindowW, GetWindowThreadProcessId};
 
     const APP_BACKGROUND: u32 = rgb_to_colorref(0x20, 0x20, 0x20);
     const APP_FOREGROUND: u32 = rgb_to_colorref(0xf2, 0xf2, 0xf2);
-    const MIN_TRACK_WIDTH: i32 = 360;
-    const MIN_TRACK_HEIGHT: i32 = 560;
-    const MAX_TRACK_WIDTH: i32 = 760;
-    const MAX_TRACK_HEIGHT: i32 = 760;
-
-    static ORIGINAL_WINDOW_PROC: AtomicIsize = AtomicIsize::new(0);
 
     pub fn apply_when_ready(title: &'static str) {
         thread::spawn(move || {
@@ -56,62 +46,6 @@ mod windows_title_bar {
         set_bool_attribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, true);
         set_color_attribute(hwnd, DWMWA_CAPTION_COLOR, APP_BACKGROUND);
         set_color_attribute(hwnd, DWMWA_TEXT_COLOR, APP_FOREGROUND);
-        install_resize_limits(hwnd);
-    }
-
-    fn install_resize_limits(hwnd: HWND) {
-        if ORIGINAL_WINDOW_PROC.load(Ordering::Relaxed) != 0 {
-            return;
-        }
-
-        let original = unsafe {
-            SetWindowLongPtrW(
-                hwnd,
-                GWLP_WNDPROC,
-                limited_window_proc as *const () as isize,
-            )
-        };
-
-        if original != 0 {
-            ORIGINAL_WINDOW_PROC.store(original, Ordering::Relaxed);
-        }
-    }
-
-    unsafe extern "system" fn limited_window_proc(
-        hwnd: HWND,
-        message: u32,
-        wparam: WPARAM,
-        lparam: LPARAM,
-    ) -> LRESULT {
-        if message == WM_GETMINMAXINFO {
-            let limits = lparam as *mut MINMAXINFO;
-
-            if let Some(limits) = unsafe { limits.as_mut() } {
-                limits.ptMinTrackSize.x = MIN_TRACK_WIDTH;
-                limits.ptMinTrackSize.y = MIN_TRACK_HEIGHT;
-                limits.ptMaxTrackSize.x = MAX_TRACK_WIDTH;
-                limits.ptMaxTrackSize.y = MAX_TRACK_HEIGHT;
-                return 0;
-            }
-        }
-
-        call_original_window_proc(hwnd, message, wparam, lparam)
-    }
-
-    fn call_original_window_proc(
-        hwnd: HWND,
-        message: u32,
-        wparam: WPARAM,
-        lparam: LPARAM,
-    ) -> LRESULT {
-        let original = ORIGINAL_WINDOW_PROC.load(Ordering::Relaxed);
-
-        if original == 0 {
-            return 0;
-        }
-
-        let original: WNDPROC = unsafe { std::mem::transmute(original) };
-        unsafe { CallWindowProcW(original, hwnd, message, wparam, lparam) }
     }
 
     fn wide_null(text: &str) -> Vec<u16> {
