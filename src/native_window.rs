@@ -5,8 +5,7 @@ mod windows_title_bar {
 
     use windows_sys::Win32::Foundation::HWND;
     use windows_sys::Win32::Graphics::Dwm::{
-        DWMWA_BORDER_COLOR, DWMWA_CAPTION_COLOR, DWMWA_TEXT_COLOR, DWMWA_USE_IMMERSIVE_DARK_MODE,
-        DwmSetWindowAttribute,
+        DWMWA_CAPTION_COLOR, DWMWA_TEXT_COLOR, DWMWA_USE_IMMERSIVE_DARK_MODE, DwmSetWindowAttribute,
     };
     use windows_sys::Win32::System::Threading::GetCurrentProcessId;
     use windows_sys::Win32::UI::WindowsAndMessaging::{FindWindowW, GetWindowThreadProcessId};
@@ -47,7 +46,6 @@ mod windows_title_bar {
         set_bool_attribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, true);
         set_color_attribute(hwnd, DWMWA_CAPTION_COLOR, APP_BACKGROUND);
         set_color_attribute(hwnd, DWMWA_TEXT_COLOR, APP_FOREGROUND);
-        set_color_attribute(hwnd, DWMWA_BORDER_COLOR, APP_BACKGROUND);
     }
 
     fn wide_null(text: &str) -> Vec<u16> {
@@ -68,7 +66,9 @@ mod windows_title_bar {
     }
 
     fn set_attribute<T>(hwnd: HWND, attribute: i32, value: &T) {
-        let value_size = size_of::<T>().try_into().expect("DWM attribute size fits in u32");
+        let value_size = size_of::<T>()
+            .try_into()
+            .expect("DWM attribute size fits in u32");
 
         unsafe {
             let _ = DwmSetWindowAttribute(
