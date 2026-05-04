@@ -671,6 +671,42 @@ component AboutView {
             vertical-alignment: center;
         }
     }
+
+    Rectangle {
+        x: root.margin;
+        y: 336px;
+        width: root.content-width;
+        height: 76px;
+        border-radius: 4px;
+        background: #252525;
+
+        Text {
+            x: 14px;
+            y: 10px;
+            width: parent.width - 28px;
+            height: 22px;
+            text: "Icon credit";
+            color: #ffffff;
+            font-size: 13px;
+            font-family: "Inter";
+            font-weight: 700;
+            vertical-alignment: center;
+        }
+
+        Text {
+            x: 14px;
+            y: 34px;
+            width: parent.width - 28px;
+            height: 32px;
+            text: "Calculator icon by Apien from Flaticon.";
+            color: #a6a6a6;
+            font-size: 12px;
+            font-family: "Inter";
+            font-weight: 500;
+            wrap: word-wrap;
+            vertical-alignment: center;
+        }
+    }
 }
 component HistoryPanel {
     in property <[string]> equations;
@@ -1002,29 +1038,28 @@ export component MainWindow inherits Window {
                 Flickable {
                     width: parent.width;
                     height: parent.height;
-                    viewport-height: 590px;
+                    viewport-height: 568px;
                     interactive: self.viewport-height > self.height;
 
-                    Text { x: 18px; y: 18px; width: parent.width - 36px; height: 24px; text: "Calculator"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
-                    NavButton { x: 10px; y: 48px; label: "Standard"; selected: root.active-view == "calculator"; clicked => { root.standard-selected(); } }
+                    NavButton { x: 10px; y: 18px; label: "Standard"; has-icon: true; icon-source: @image-url("../assets/calculator.png"); selected: root.active-view == "calculator"; clicked => { root.standard-selected(); } }
 
-                    Text { x: 18px; y: 88px; width: parent.width - 36px; height: 24px; text: "Converter"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
-                    NavButton { x: 10px; y: 116px; label: "Volume"; has-icon: true; icon-source: @image-url("../assets/icons/volume.svg"); selected: root.active-view == "converter" && root.category-title == "Volume"; clicked => { root.collapse-history(); root.category-selected("Volume"); } }
-                    NavButton { x: 10px; y: 146px; label: "Length"; has-icon: true; icon-source: @image-url("../assets/icons/length.svg"); selected: root.active-view == "converter" && root.category-title == "Length"; clicked => { root.collapse-history(); root.category-selected("Length"); } }
-                    NavButton { x: 10px; y: 176px; label: "Weight and mass"; has-icon: true; icon-source: @image-url("../assets/icons/weight-mass.svg"); selected: root.active-view == "converter" && root.category-title == "Weight and mass"; clicked => { root.collapse-history(); root.category-selected("Weight and mass"); } }
-                    NavButton { x: 10px; y: 206px; label: "Temperature"; has-icon: true; icon-source: @image-url("../assets/icons/temperature.svg"); selected: root.active-view == "converter" && root.category-title == "Temperature"; clicked => { root.collapse-history(); root.category-selected("Temperature"); } }
-                    NavButton { x: 10px; y: 236px; label: "Energy"; has-icon: true; icon-source: @image-url("../assets/icons/energy.svg"); selected: root.active-view == "converter" && root.category-title == "Energy"; clicked => { root.collapse-history(); root.category-selected("Energy"); } }
-                    NavButton { x: 10px; y: 266px; label: "Area"; has-icon: true; icon-source: @image-url("../assets/icons/area.svg"); selected: root.active-view == "converter" && root.category-title == "Area"; clicked => { root.collapse-history(); root.category-selected("Area"); } }
-                    NavButton { x: 10px; y: 296px; label: "Speed"; has-icon: true; icon-source: @image-url("../assets/icons/speed.svg"); selected: root.active-view == "converter" && root.category-title == "Speed"; clicked => { root.collapse-history(); root.category-selected("Speed"); } }
-                    NavButton { x: 10px; y: 326px; label: "Time"; has-icon: true; icon-source: @image-url("../assets/icons/time.svg"); selected: root.active-view == "converter" && root.category-title == "Time"; clicked => { root.collapse-history(); root.category-selected("Time"); } }
-                    NavButton { x: 10px; y: 356px; label: "Power"; has-icon: true; icon-source: @image-url("../assets/icons/power.svg"); selected: root.active-view == "converter" && root.category-title == "Power"; clicked => { root.collapse-history(); root.category-selected("Power"); } }
-                    NavButton { x: 10px; y: 386px; label: "Data"; has-icon: true; icon-source: @image-url("../assets/icons/data.svg"); selected: root.active-view == "converter" && root.category-title == "Data"; clicked => { root.collapse-history(); root.category-selected("Data"); } }
-                    NavButton { x: 10px; y: 416px; label: "Pressure"; has-icon: true; icon-source: @image-url("../assets/icons/pressure.svg"); selected: root.active-view == "converter" && root.category-title == "Pressure"; clicked => { root.collapse-history(); root.category-selected("Pressure"); } }
-                    NavButton { x: 10px; y: 446px; label: "Angle"; has-icon: true; icon-source: @image-url("../assets/icons/angle.svg"); selected: root.active-view == "converter" && root.category-title == "Angle"; clicked => { root.collapse-history(); root.category-selected("Angle"); } }
+                    Text { x: 18px; y: 66px; width: parent.width - 36px; height: 24px; text: "Converter"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
+                    NavButton { x: 10px; y: 94px; label: "Volume"; has-icon: true; icon-source: @image-url("../assets/icons/volume.svg"); selected: root.active-view == "converter" && root.category-title == "Volume"; clicked => { root.collapse-history(); root.category-selected("Volume"); } }
+                    NavButton { x: 10px; y: 124px; label: "Length"; has-icon: true; icon-source: @image-url("../assets/icons/length.svg"); selected: root.active-view == "converter" && root.category-title == "Length"; clicked => { root.collapse-history(); root.category-selected("Length"); } }
+                    NavButton { x: 10px; y: 154px; label: "Weight and mass"; has-icon: true; icon-source: @image-url("../assets/icons/weight-mass.svg"); selected: root.active-view == "converter" && root.category-title == "Weight and mass"; clicked => { root.collapse-history(); root.category-selected("Weight and mass"); } }
+                    NavButton { x: 10px; y: 184px; label: "Temperature"; has-icon: true; icon-source: @image-url("../assets/icons/temperature.svg"); selected: root.active-view == "converter" && root.category-title == "Temperature"; clicked => { root.collapse-history(); root.category-selected("Temperature"); } }
+                    NavButton { x: 10px; y: 214px; label: "Energy"; has-icon: true; icon-source: @image-url("../assets/icons/energy.svg"); selected: root.active-view == "converter" && root.category-title == "Energy"; clicked => { root.collapse-history(); root.category-selected("Energy"); } }
+                    NavButton { x: 10px; y: 244px; label: "Area"; has-icon: true; icon-source: @image-url("../assets/icons/area.svg"); selected: root.active-view == "converter" && root.category-title == "Area"; clicked => { root.collapse-history(); root.category-selected("Area"); } }
+                    NavButton { x: 10px; y: 274px; label: "Speed"; has-icon: true; icon-source: @image-url("../assets/icons/speed.svg"); selected: root.active-view == "converter" && root.category-title == "Speed"; clicked => { root.collapse-history(); root.category-selected("Speed"); } }
+                    NavButton { x: 10px; y: 304px; label: "Time"; has-icon: true; icon-source: @image-url("../assets/icons/time.svg"); selected: root.active-view == "converter" && root.category-title == "Time"; clicked => { root.collapse-history(); root.category-selected("Time"); } }
+                    NavButton { x: 10px; y: 334px; label: "Power"; has-icon: true; icon-source: @image-url("../assets/icons/power.svg"); selected: root.active-view == "converter" && root.category-title == "Power"; clicked => { root.collapse-history(); root.category-selected("Power"); } }
+                    NavButton { x: 10px; y: 364px; label: "Data"; has-icon: true; icon-source: @image-url("../assets/icons/data.svg"); selected: root.active-view == "converter" && root.category-title == "Data"; clicked => { root.collapse-history(); root.category-selected("Data"); } }
+                    NavButton { x: 10px; y: 394px; label: "Pressure"; has-icon: true; icon-source: @image-url("../assets/icons/pressure.svg"); selected: root.active-view == "converter" && root.category-title == "Pressure"; clicked => { root.collapse-history(); root.category-selected("Pressure"); } }
+                    NavButton { x: 10px; y: 424px; label: "Angle"; has-icon: true; icon-source: @image-url("../assets/icons/angle.svg"); selected: root.active-view == "converter" && root.category-title == "Angle"; clicked => { root.collapse-history(); root.category-selected("Angle"); } }
 
-                    Text { x: 18px; y: 486px; width: parent.width - 36px; height: 24px; text: "Help"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
-                    NavButton { x: 10px; y: 516px; label: "Keyboard shortcuts"; has-icon: true; icon-source: @image-url("../assets/icons/keyboard.svg"); selected: root.active-view == "shortcuts"; clicked => { root.collapse-history(); root.shortcuts-selected(); } }
-                    NavButton { x: 10px; y: 548px; label: "About"; has-icon: true; icon-source: @image-url("../assets/icons/info.svg"); selected: root.active-view == "about"; clicked => { root.collapse-history(); root.active-view = "about"; root.sidebar-open = false; } }
+                    Text { x: 18px; y: 464px; width: parent.width - 36px; height: 24px; text: "Help"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
+                    NavButton { x: 10px; y: 494px; label: "Keyboard shortcuts"; has-icon: true; icon-source: @image-url("../assets/icons/keyboard.svg"); selected: root.active-view == "shortcuts"; clicked => { root.collapse-history(); root.shortcuts-selected(); } }
+                    NavButton { x: 10px; y: 526px; label: "About"; has-icon: true; icon-source: @image-url("../assets/icons/info.svg"); selected: root.active-view == "about"; clicked => { root.collapse-history(); root.active-view = "about"; root.sidebar-open = false; } }
                 }
             }
         }
