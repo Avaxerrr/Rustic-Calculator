@@ -30,4 +30,5 @@ fn update_ui(ui: &MainWindow, snapshot: CalculatorSnapshot) {
     ui.set_equation_text(snapshot.equation.into());
     ui.set_active_operator(snapshot.active_operator.into());
     ui.set_clear_label(snapshot.clear_label.into());
+    ui.set_display_font_size(snapshot.display_font_size);
 }

@@ -1,3 +1,5 @@
+import "../assets/fonts/Inter-Variable.ttf";
+
 component IconButton {
     in property <string> kind;
     callback clicked();
@@ -43,6 +45,7 @@ component MemoryButton {
             text: root.label;
             color: #ffffff;
             font-size: 13px;
+            font-family: "Inter";
             font-weight: 600;
             horizontal-alignment: center;
             vertical-alignment: center;
@@ -87,6 +90,7 @@ component CalcButton {
             text: root.label;
             color: #ffffff;
             font-size: root.label == "Back" ? 20px : root.label == "sqrt" ? 20px : 25px;
+            font-family: "Inter";
             font-weight: root.operation ? 400 : 500;
             horizontal-alignment: center;
             vertical-alignment: center;
@@ -102,11 +106,13 @@ export component MainWindow inherits Window {
     in property <string> active-operator: "";
     in property <string> clear-label: "AC";
     callback button-pressed(string);
+    in property <int> display-font-size: 52;
 
     title: "Rustic Calculator";
     width: 400px;
     height: 620px;
     background: #202020;
+    default-font-family: "Inter";
 
     property <length> margin: 8px;
     property <length> gap: 4px;
@@ -128,6 +134,7 @@ export component MainWindow inherits Window {
             text: "Standard";
             color: #ffffff;
             font-size: 20px;
+            font-family: "Inter";
             font-weight: 600;
             vertical-alignment: center;
         }
@@ -142,6 +149,7 @@ export component MainWindow inherits Window {
             text: root.equation-text;
             color: #a6a6a6;
             font-size: 14px;
+            font-family: "Inter";
             horizontal-alignment: right;
             vertical-alignment: center;
             overflow: elide;
@@ -154,8 +162,9 @@ export component MainWindow inherits Window {
             height: 78px;
             text: root.display-text;
             color: #ffffff;
-            font-size: 52px;
-            font-weight: 600;
+            font-size: root.display-font-size * 1px;
+            font-family: "Inter";
+            font-weight: 500;
             horizontal-alignment: right;
             vertical-alignment: center;
             overflow: elide;

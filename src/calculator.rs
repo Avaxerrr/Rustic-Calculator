@@ -22,6 +22,7 @@ pub struct CalculatorSnapshot {
     pub equation: String,
     pub active_operator: String,
     pub clear_label: String,
+    pub display_font_size: i32,
 }
 
 #[derive(Default)]
@@ -44,8 +45,11 @@ impl Calculator {
     }
 
     pub fn snapshot(&self) -> CalculatorSnapshot {
+        let display = format_display(self.display());
+
         CalculatorSnapshot {
-            display: format_display(self.display()),
+            display_font_size: display_font_size(&display),
+            display,
             equation: self.equation.clone(),
             active_operator: self
                 .pending_operator
@@ -97,6 +101,10 @@ impl Calculator {
             self.display.clear();
             self.has_error = false;
             self.reset_display_on_next_digit = false;
+        }
+
+        if significant_digit_count(&self.display) >= 16 {
+            return;
         }
 
         if self.display == "0" {
@@ -230,6 +238,16 @@ fn format_number(value: f64) -> String {
         return "Error".to_owned();
     }
 
+    let fixed = format_fixed_number(value);
+
+    if format_display(&fixed).chars().count() <= 20 {
+        fixed
+    } else {
+        format_scientific(value)
+    }
+}
+
+fn format_fixed_number(value: f64) -> String {
     if value.fract().abs() < f64::EPSILON {
         return (value as i64).to_string();
     }
@@ -247,8 +265,31 @@ fn format_number(value: f64) -> String {
     if text == "-0" { "0".to_owned() } else { text }
 }
 
+fn format_scientific(value: f64) -> String {
+    let raw = format!("{value:.12e}");
+    let Some((mantissa, exponent)) = raw.split_once('e') else {
+        return raw;
+    };
+
+    let mut mantissa = mantissa.to_owned();
+
+    while mantissa.contains('.') && mantissa.ends_with('0') {
+        mantissa.pop();
+    }
+
+    if mantissa.ends_with('.') {
+        mantissa.pop();
+    }
+
+    let exponent = exponent
+        .parse::<i32>()
+        .map_or_else(|_| exponent.to_owned(), |value| value.to_string());
+
+    format!("{mantissa}e{exponent}")
+}
+
 fn format_display(value: &str) -> String {
-    if value == "Error" {
+    if value == "Error" || value.contains('e') {
         return value.to_owned();
     }
 
@@ -275,6 +316,19 @@ fn add_group_separators(value: &str) -> String {
 
     let grouped: String = grouped.chars().rev().collect();
     format!("{sign}{grouped}")
+}
+
+fn significant_digit_count(value: &str) -> usize {
+    value.chars().filter(char::is_ascii_digit).count()
+}
+
+fn display_font_size(display: &str) -> i32 {
+    match display.chars().count() {
+        0..=12 => 52,
+        13..=16 => 42,
+        17..=20 => 28,
+        _ => 23,
+    }
 }
 
 #[cfg(test)]
@@ -324,5 +378,42 @@ mod tests {
         }
 
         assert_eq!(calculator.snapshot().display, "123,456");
+    }
+
+    #[test]
+    fn shrinks_long_manual_input() {
+        let mut calculator = Calculator::default();
+
+        for digit in "1234567890123".chars() {
+            calculator.press(&digit.to_string());
+        }
+
+        let snapshot = calculator.snapshot();
+        assert_eq!(snapshot.display, "1,234,567,890,123");
+        assert_eq!(snapshot.display_font_size, 28);
+    }
+
+    #[test]
+    fn caps_manual_input_digits() {
+        let mut calculator = Calculator::default();
+
+        for digit in "12345678901234567890".chars() {
+            calculator.press(&digit.to_string());
+        }
+
+        assert_eq!(calculator.display(), "1234567890123456");
+    }
+
+    #[test]
+    fn formats_huge_results_scientifically() {
+        let mut calculator = Calculator::default();
+
+        for digit in "9999999999999999".chars() {
+            calculator.press(&digit.to_string());
+        }
+        calculator.press("x");
+        calculator.press("9");
+
+        assert!(calculator.press("=").display.contains('e'));
     }
 }
