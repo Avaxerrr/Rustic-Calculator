@@ -142,7 +142,7 @@ impl Calculator {
         }
 
         self.pending_operator = Some(operator);
-        self.equation = format!("{} {}", self.display(), operator.label());
+        self.equation = format!("{} {}", format_display(self.display()), operator.label());
         self.reset_display_on_next_digit = true;
     }
 
@@ -160,9 +160,9 @@ impl Calculator {
         let right = self.current_value();
         self.equation = format!(
             "{} {} {} =",
-            format_number(left),
+            format_display(&format_number(left)),
             operator.label(),
-            format_number(right)
+            format_display(&format_number(right))
         );
 
         let Some(result) = apply_operator(left, right, operator) else {
@@ -378,6 +378,19 @@ mod tests {
         }
 
         assert_eq!(calculator.snapshot().display, "123,456");
+    }
+
+    #[test]
+    fn formats_grouped_equation_history() {
+        let mut calculator = Calculator::default();
+
+        for digit in "1234567".chars() {
+            calculator.press(&digit.to_string());
+        }
+        assert_eq!(calculator.press("+").equation, "1,234,567 +");
+
+        calculator.press("2");
+        assert_eq!(calculator.press("=").equation, "1,234,567 + 2 =");
     }
 
     #[test]

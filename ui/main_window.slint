@@ -113,16 +113,48 @@ export component MainWindow inherits Window {
     height: 620px;
     background: #202020;
     default-font-family: "Inter";
+    forward-focus: keyboard-focus;
 
     property <length> margin: 8px;
     property <length> gap: 4px;
     property <length> key-width: (root.width - (root.margin * 2) - (root.gap * 3)) / 4;
     property <length> memory-width: (root.width - (root.margin * 2) - (root.gap * 5)) / 6;
 
-    Rectangle {
+    function handle-key(event: KeyEvent) -> EventResult {
+        if event.text == "0" { root.button-pressed("0"); return accept; }
+        if event.text == "1" { root.button-pressed("1"); return accept; }
+        if event.text == "2" { root.button-pressed("2"); return accept; }
+        if event.text == "3" { root.button-pressed("3"); return accept; }
+        if event.text == "4" { root.button-pressed("4"); return accept; }
+        if event.text == "5" { root.button-pressed("5"); return accept; }
+        if event.text == "6" { root.button-pressed("6"); return accept; }
+        if event.text == "7" { root.button-pressed("7"); return accept; }
+        if event.text == "8" { root.button-pressed("8"); return accept; }
+        if event.text == "9" { root.button-pressed("9"); return accept; }
+        if event.text == "." { root.button-pressed("."); return accept; }
+        if event.text == "+" { root.button-pressed("+"); return accept; }
+        if event.text == "-" { root.button-pressed("-"); return accept; }
+        if event.text == "*" { root.button-pressed("x"); return accept; }
+        if event.text == "/" { root.button-pressed("/"); return accept; }
+        if event.text == "%" { root.button-pressed("%"); return accept; }
+        if event.text == "=" || event.text == Key.Return { root.button-pressed("="); return accept; }
+        if event.text == Key.Backspace { root.button-pressed("Back"); return accept; }
+        if event.text == Key.Delete { root.button-pressed("CE"); return accept; }
+        if event.text == Key.Escape { root.button-pressed(root.clear-label); return accept; }
+        return reject;
+    }
+
+    keyboard-focus := FocusScope {
         width: root.width;
         height: root.height;
-        background: #202020;
+        capture-key-pressed(event) => {
+            return root.handle-key(event);
+        }
+
+        Rectangle {
+            width: parent.width;
+            height: parent.height;
+            background: #202020;
 
         IconButton { x: root.margin; y: 10px; kind: "menu"; clicked => { } }
 
@@ -206,5 +238,11 @@ export component MainWindow inherits Window {
         CalcButton { x: root.margin + 1 * (root.key-width + root.gap); y: 542px; button-width: root.key-width; label: "0"; clicked => { root.button-pressed("0"); } }
         CalcButton { x: root.margin + 2 * (root.key-width + root.gap); y: 542px; button-width: root.key-width; label: "."; clicked => { root.button-pressed("."); } }
         CalcButton { x: root.margin + 3 * (root.key-width + root.gap); y: 542px; button-width: root.key-width; label: "="; equal: true; clicked => { root.button-pressed("="); } }
+
+        }
+    }
+
+    init => {
+        keyboard-focus.focus();
     }
 }
