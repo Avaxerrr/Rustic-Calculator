@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  windows-release:
+    name: Windows release
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use stable Rust
+        run: rustup default stable
+
+      - name: Build release executable
+        run: cargo build --release --locked
+
+      - name: Package release
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}"
+          $packageName = "rustic-calculator-$version-windows-x64"
+          $packageDir = "dist/$packageName"
+
+          New-Item -ItemType Directory -Force -Path $packageDir | Out-Null
+          Copy-Item "target/release/rustic-calculator.exe" "$packageDir/rustic-calculator.exe"
+          Copy-Item "README.md" "$packageDir/README.md"
+          Copy-Item "LICENSE" "$packageDir/LICENSE"
+
+          Compress-Archive -Path "$packageDir/*" -DestinationPath "dist/$packageName.zip" -Force
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rustic-calculator-windows-x64
+          path: dist/*.zip
+          if-no-files-found: error
+
+      - name: Create GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          gh release create $tag dist/*.zip --title "Rustic Calculator $tag" --notes "Windows x64 release build for Rustic Calculator $tag."
