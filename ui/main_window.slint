@@ -11,6 +11,7 @@ export component MainWindow inherits Window {
     in-out property <string> active-view: "calculator";
     in-out property <bool> sidebar-open: false;
     in-out property <bool> history-open: false;
+    in-out property <bool> history-visible: false;
 
     in property <string> display-text: "0";
     in property <string> equation-text: "";
@@ -70,24 +71,41 @@ export component MainWindow inherits Window {
     property <length> converter-key-width: (root.window-width - (root.margin * 2) - (root.gap * 2)) / 3;
     property <length> converter-wide-key-width: root.converter-key-width * 2 + root.gap;
 
+    history-reveal-timer := Timer {
+        interval: 40ms;
+        running: false;
+
+        triggered => {
+            self.running = false;
+            root.history-visible = root.history-open;
+        }
+    }
+
     function toggle-history() {
         if root.history-open {
+            history-reveal-timer.stop();
+            root.history-visible = false;
             root.calculator-panel-width = max(root.min-window-width, min(root.max-window-width, root.content-width));
-            root.width = root.calculator-panel-width;
             root.history-open = false;
+            root.width = root.calculator-panel-width;
         } else {
             root.calculator-panel-width = max(root.min-window-width, min(root.window-width, root.max-window-width - root.history-min-width));
-            root.history-open = true;
+            root.history-visible = false;
             root.width = root.calculator-panel-width + root.history-min-width;
+            root.history-open = true;
+            history-reveal-timer.restart();
         }
     }
 
     function collapse-history() {
         if root.history-open {
+            history-reveal-timer.stop();
+            root.history-visible = false;
             root.calculator-panel-width = max(root.min-window-width, min(root.max-window-width, root.content-width));
-            root.width = root.calculator-panel-width;
             root.history-open = false;
+            root.width = root.calculator-panel-width;
         } else {
+            root.history-visible = false;
             root.history-open = false;
         }
     }
@@ -220,7 +238,7 @@ export component MainWindow inherits Window {
                         y: 0px;
                         width: root.history-panel-width;
                         height: parent.height;
-                        visible: root.active-view == "calculator" && root.history-open;
+                        visible: root.active-view == "calculator" && root.history-visible;
                         equations: root.history-equations;
                         results: root.history-results;
                         clear-history-requested => { root.clear-history-requested(); }
