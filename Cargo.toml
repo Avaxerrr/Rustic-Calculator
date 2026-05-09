@@ -1,6 +1,6 @@
 [package]
 name = "rustic-calculator"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2024"
 authors = ["Avaxerrr"]
 license = "MIT"
@@ -17,7 +17,7 @@ serde_json = "1.0"
 slint = "1.16.1"
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Graphics_Dwm", "Win32_System_Threading", "Win32_UI_WindowsAndMessaging"] }
+windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Graphics_Dwm", "Win32_System_DataExchange", "Win32_System_Memory", "Win32_System_Threading", "Win32_UI_WindowsAndMessaging"] }
 
 [build-dependencies]
 slint-build = "1.16.1"

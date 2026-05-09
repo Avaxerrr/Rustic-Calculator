@@ -1,3 +1,5 @@
+use crate::number_input::{PasteNumberOptions, parse_pasted_number};
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Operator {
     Add,
@@ -98,6 +100,23 @@ impl Calculator {
 
     pub fn clear_history(&mut self) -> CalculatorSnapshot {
         self.history.clear();
+        self.snapshot()
+    }
+
+    pub fn paste_number(&mut self, text: &str) -> CalculatorSnapshot {
+        let Some(value) = parse_pasted_number(
+            text,
+            PasteNumberOptions {
+                allow_negative: true,
+                max_digits: 18,
+            },
+        ) else {
+            return self.snapshot();
+        };
+
+        self.display = value;
+        self.has_error = false;
+        self.reset_display_on_next_digit = false;
         self.snapshot()
     }
 
@@ -294,11 +313,7 @@ fn format_fixed_number(value: f64) -> String {
         text.pop();
     }
 
-    if text == "-0" {
-        "0".to_owned()
-    } else {
-        text
-    }
+    if text == "-0" { "0".to_owned() } else { text }
 }
 
 fn format_scientific(value: f64) -> String {
@@ -495,6 +510,26 @@ mod tests {
         }
 
         assert_eq!(calculator.display(), "123456789012345678");
+    }
+
+    #[test]
+    fn pastes_valid_number_and_rejects_invalid_text() {
+        let mut calculator = Calculator::default();
+
+        assert_eq!(calculator.paste_number(" 12,345.67 ").display, "12,345.67");
+        assert_eq!(calculator.paste_number("15234B").display, "12,345.67");
+    }
+
+    #[test]
+    fn pasted_number_can_complete_pending_operation() {
+        let mut calculator = Calculator::default();
+
+        calculator.press("1");
+        calculator.press("2");
+        calculator.press("+");
+        calculator.paste_number("3");
+
+        assert_eq!(calculator.press("=").display, "15");
     }
 
     #[test]

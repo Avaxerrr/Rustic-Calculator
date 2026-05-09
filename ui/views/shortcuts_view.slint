@@ -41,8 +41,6 @@ component ShortcutRow {
     }
 }
 
-
-
 export component ShortcutsView {
     in property <length> margin;
 
@@ -53,9 +51,9 @@ export component ShortcutsView {
 
     Text {
         x: root.margin;
-        y: 20px;
+        y: 18px;
         width: root.content-width;
-        height: 42px;
+        height: 38px;
         text: "Use these keys while the calculator or converter is focused.";
         color: #a6a6a6;
         font-size: 13px;
@@ -65,18 +63,20 @@ export component ShortcutsView {
         vertical-alignment: center;
     }
 
-    Text { x: root.margin; y: 78px; width: root.content-width; height: 22px; text: "Calculator"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
-    ShortcutRow { x: root.margin; y: 106px; row-width: root.content-width; action: "Enter numbers"; keys: "0-9"; }
-    ShortcutRow { x: root.margin; y: 144px; row-width: root.content-width; action: "Decimal point"; keys: "."; }
-    ShortcutRow { x: root.margin; y: 182px; row-width: root.content-width; action: "Calculate result"; keys: "Enter / ="; }
-    ShortcutRow { x: root.margin; y: 220px; row-width: root.content-width; action: "Operators"; keys: "+ - * /"; }
-    ShortcutRow { x: root.margin; y: 258px; row-width: root.content-width; action: "Backspace"; keys: "Backspace"; }
-    ShortcutRow { x: root.margin; y: 296px; row-width: root.content-width; action: "Clear entry"; keys: "Delete"; }
-    ShortcutRow { x: root.margin; y: 334px; row-width: root.content-width; action: "Clear"; keys: "Esc"; }
+    Text { x: root.margin; y: 66px; width: root.content-width; height: 22px; text: "Calculator"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
+    ShortcutRow { x: root.margin; y: 92px; row-width: root.content-width; action: "Enter numbers"; keys: "0-9"; }
+    ShortcutRow { x: root.margin; y: 126px; row-width: root.content-width; action: "Decimal point"; keys: "."; }
+    ShortcutRow { x: root.margin; y: 160px; row-width: root.content-width; action: "Calculate result"; keys: "Enter / ="; }
+    ShortcutRow { x: root.margin; y: 194px; row-width: root.content-width; action: "Operators"; keys: "+ - * /"; }
+    ShortcutRow { x: root.margin; y: 228px; row-width: root.content-width; action: "Backspace"; keys: "Backspace"; }
+    ShortcutRow { x: root.margin; y: 262px; row-width: root.content-width; action: "Clear entry"; keys: "Delete"; }
+    ShortcutRow { x: root.margin; y: 296px; row-width: root.content-width; action: "Clear"; keys: "Esc"; }
+    ShortcutRow { x: root.margin; y: 330px; row-width: root.content-width; action: "Paste number"; keys: "Ctrl+V"; }
 
-    Text { x: root.margin; y: 390px; width: root.content-width; height: 22px; text: "Converter"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
-    ShortcutRow { x: root.margin; y: 418px; row-width: root.content-width; action: "Enter value"; keys: "0-9"; }
-    ShortcutRow { x: root.margin; y: 456px; row-width: root.content-width; action: "Decimal point"; keys: "."; }
-    ShortcutRow { x: root.margin; y: 494px; row-width: root.content-width; action: "Delete digit"; keys: "Backspace"; }
-    ShortcutRow { x: root.margin; y: 532px; row-width: root.content-width; action: "Clear value"; keys: "Delete / Esc"; }
+    Text { x: root.margin; y: 374px; width: root.content-width; height: 22px; text: "Converter"; color: #a6a6a6; font-size: 12px; font-family: "Inter"; font-weight: 700; }
+    ShortcutRow { x: root.margin; y: 400px; row-width: root.content-width; action: "Enter value"; keys: "0-9"; }
+    ShortcutRow { x: root.margin; y: 434px; row-width: root.content-width; action: "Decimal point"; keys: "."; }
+    ShortcutRow { x: root.margin; y: 468px; row-width: root.content-width; action: "Delete digit"; keys: "Backspace"; }
+    ShortcutRow { x: root.margin; y: 502px; row-width: root.content-width; action: "Clear value"; keys: "Delete / Esc"; }
+    ShortcutRow { x: root.margin; y: 536px; row-width: root.content-width; action: "Paste value"; keys: "Ctrl+V"; }
 }

@@ -39,6 +39,7 @@ export component MainWindow inherits Window {
     callback swap-units-pressed();
     callback shortcuts-selected();
     callback clear-history-requested();
+    callback paste-requested();
 
     title: "Rustic Calculator";
     icon: @image-url("../assets/calculator.png");
@@ -83,6 +84,11 @@ export component MainWindow inherits Window {
     }
 
     function handle-key(event: KeyEvent) -> EventResult {
+        if event.modifiers.control && !event.modifiers.shift && !event.modifiers.alt && !event.modifiers.meta && (event.text == "v" || event.text == "V") {
+            root.paste-requested();
+            return accept;
+        }
+
         if root.active-view == "calculator" {
             if event.text == "0" { root.button-pressed("0"); return accept; }
             if event.text == "1" { root.button-pressed("1"); return accept; }

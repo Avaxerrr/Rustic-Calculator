@@ -1,4 +1,5 @@
 use crate::features::converters::{self, ConverterCategory};
+use crate::number_input::{PasteNumberOptions, parse_pasted_number};
 
 #[derive(Clone, Copy)]
 struct ConverterSelection {
@@ -90,6 +91,21 @@ impl ConverterApp {
 
     pub fn press(&mut self, label: &str) -> ConverterSnapshot {
         self.input = update_input(&self.input, label);
+        self.snapshot()
+    }
+
+    pub fn paste_number(&mut self, text: &str) -> ConverterSnapshot {
+        let Some(value) = parse_pasted_number(
+            text,
+            PasteNumberOptions {
+                allow_negative: self.selection.category == ConverterCategory::Temperature,
+                max_digits: 16,
+            },
+        ) else {
+            return self.snapshot();
+        };
+
+        self.input = value;
         self.snapshot()
     }
 
@@ -319,5 +335,23 @@ mod tests {
 
         let snapshot = app.select_to_unit("Kelvin");
         assert_eq!(snapshot.to_unit, "Kelvin");
+    }
+
+    #[test]
+    fn pastes_values_into_converter() {
+        let mut app = ConverterApp::default();
+
+        let snapshot = app.paste_number(" 12,345.5 ");
+
+        assert_eq!(snapshot.input_value, "12345.5");
+    }
+
+    #[test]
+    fn only_temperature_accepts_negative_paste() {
+        let mut app = ConverterApp::default();
+        assert_eq!(app.paste_number("-12").input_value, "1");
+
+        app.select_category("Temperature");
+        assert_eq!(app.paste_number("-12").input_value, "-12");
     }
 }

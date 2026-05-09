@@ -1,10 +1,11 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use crate::MainWindow;
 use crate::calculator::{Calculator, CalculatorSnapshot, HistoryEntry};
+use crate::clipboard;
 use crate::converter_app::{ConverterApp, ConverterSnapshot};
 use crate::window_state;
-use crate::MainWindow;
 use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 
 pub fn run(ui: MainWindow) -> Result<(), slint::PlatformError> {
@@ -49,6 +50,32 @@ pub fn run(ui: MainWindow) -> Result<(), slint::PlatformError> {
 
             if let Some(ui) = ui_handle.upgrade() {
                 update_converter_ui(&ui, snapshot);
+            }
+        }
+    });
+
+    let ui_handle = ui.as_weak();
+    ui.on_paste_requested({
+        let calculator = Rc::clone(&calculator);
+        let converter = Rc::clone(&converter);
+
+        move || {
+            let Some(text) = clipboard::text() else {
+                return;
+            };
+
+            if let Some(ui) = ui_handle.upgrade() {
+                match ui.get_active_view().as_str() {
+                    "calculator" => {
+                        let snapshot = calculator.borrow_mut().paste_number(&text);
+                        update_calculator_ui(&ui, snapshot);
+                    }
+                    "converter" => {
+                        let snapshot = converter.borrow_mut().paste_number(&text);
+                        update_converter_ui(&ui, snapshot);
+                    }
+                    _ => {}
+                }
             }
         }
     });

@@ -34,8 +34,8 @@ target/release/rustic-calculator.exe
 A GitHub release is created automatically when a version tag is pushed:
 
 ```powershell
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.1.0
+git push origin v1.1.0
 ```
 
 The release workflow builds the optimized Windows executable and attaches a zipped `rustic-calculator.exe` package.

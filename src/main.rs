@@ -2,9 +2,11 @@
 
 mod app;
 mod calculator;
+mod clipboard;
 mod converter_app;
 mod features;
 mod native_window;
+mod number_input;
 mod window_state;
 
 slint::include_modules!();
