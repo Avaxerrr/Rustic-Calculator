@@ -325,7 +325,8 @@ fn pasted_number_options() -> PasteNumberOptions {
 }
 
 fn parse_pasted_expression(text: &str) -> Option<PastedExpression> {
-    if text.contains(['\r', '\n']) {
+    let text = text.trim();
+    if text.is_empty() || text.contains(['\r', '\n']) {
         return None;
     }
 
@@ -779,12 +780,22 @@ mod tests {
     fn pasted_multi_operation_history_preserves_full_expression() {
         let mut calculator = Calculator::default();
 
-        let snapshot = calculator.paste_input("12 - 41 + 5 / 51=");
+        for expression in [
+            "12 - 41 + 5 / 51=",
+            "12 - 41 + 5 / 51 =",
+            "12 - 41 + 5 / 51 =\r\n",
+        ] {
+            let snapshot = calculator.paste_input(expression);
 
-        assert_eq!(snapshot.display, "-0.4705882353");
-        assert_eq!(snapshot.equation, "12 - 41 + 5 / 51 =");
-        assert_eq!(snapshot.history[0].equation, "12 - 41 + 5 / 51 =");
-        assert_eq!(snapshot.history[0].result, "-0.4705882353");
+            assert_eq!(snapshot.display, "-0.4705882353", "{expression}");
+            assert_eq!(snapshot.equation, "12 - 41 + 5 / 51 =", "{expression}");
+            assert_eq!(
+                snapshot.history[0].equation, "12 - 41 + 5 / 51 =",
+                "{expression}"
+            );
+            assert_eq!(snapshot.history[0].result, "-0.4705882353", "{expression}");
+            calculator.clear();
+        }
     }
 
     #[test]

@@ -5,12 +5,8 @@ pub struct PasteNumberOptions {
 }
 
 pub fn parse_pasted_number(text: &str, options: PasteNumberOptions) -> Option<String> {
-    if text.contains(['\r', '\n']) {
-        return None;
-    }
-
     let text = text.trim();
-    if text.is_empty() {
+    if text.is_empty() || text.contains(['\r', '\n']) {
         return None;
     }
 
@@ -143,7 +139,7 @@ mod tests {
             Some("12345".to_owned())
         );
         assert_eq!(
-            parse_pasted_number(" 12,345.67 ", POSITIVE_ONLY),
+            parse_pasted_number(" \r\n12,345.67\r\n ", POSITIVE_ONLY),
             Some("12345.67".to_owned())
         );
         assert_eq!(
