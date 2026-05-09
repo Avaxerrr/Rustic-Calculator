@@ -103,21 +103,39 @@ impl Calculator {
         self.snapshot()
     }
 
-    pub fn paste_number(&mut self, text: &str) -> CalculatorSnapshot {
-        let Some(value) = parse_pasted_number(
-            text,
-            PasteNumberOptions {
-                allow_negative: true,
-                max_digits: 18,
-            },
-        ) else {
+    pub fn paste_input(&mut self, text: &str) -> CalculatorSnapshot {
+        if let Some(value) = parse_pasted_number(text, pasted_number_options()) {
+            self.apply_pasted_number(value);
+            return self.snapshot();
+        }
+
+        let Some(tokens) = parse_pasted_expression(text) else {
             return self.snapshot();
         };
 
+        self.clear();
+        for token in tokens {
+            self.apply_paste_token(token);
+            if self.has_error {
+                break;
+            }
+        }
+        self.snapshot()
+    }
+
+    fn apply_paste_token(&mut self, token: PasteToken) {
+        match token {
+            PasteToken::Number(value) => self.apply_pasted_number(value),
+            PasteToken::Operator(operator) => self.input_operator(operator),
+            PasteToken::Percent => self.percent(),
+            PasteToken::Equals => self.evaluate_pending(true),
+        }
+    }
+
+    fn apply_pasted_number(&mut self, value: String) {
         self.display = value;
         self.has_error = false;
         self.reset_display_on_next_digit = false;
-        self.snapshot()
     }
 
     fn clear(&mut self) {
@@ -266,6 +284,138 @@ impl Calculator {
 
     fn current_value(&self) -> f64 {
         self.display().parse().unwrap_or(0.0)
+    }
+}
+
+#[derive(Clone, PartialEq, Eq)]
+enum PasteToken {
+    Number(String),
+    Operator(Operator),
+    Percent,
+    Equals,
+}
+
+fn pasted_number_options() -> PasteNumberOptions {
+    PasteNumberOptions {
+        allow_negative: true,
+        max_digits: 18,
+    }
+}
+
+fn parse_pasted_expression(text: &str) -> Option<Vec<PasteToken>> {
+    if text.contains(['\r', '\n']) {
+        return None;
+    }
+
+    let mut tokens = Vec::new();
+    let mut index = 0;
+    let mut expecting_number = true;
+
+    loop {
+        index = skip_whitespace(text, index);
+        let Some((character, next_index)) = next_char(text, index) else {
+            break;
+        };
+
+        if expecting_number {
+            let (value, next_index) = parse_expression_number(text, index, tokens.is_empty())?;
+            tokens.push(PasteToken::Number(value));
+            index = next_index;
+            expecting_number = false;
+            continue;
+        }
+
+        if character == '%' {
+            if matches!(tokens.last(), Some(PasteToken::Percent)) {
+                return None;
+            }
+            tokens.push(PasteToken::Percent);
+            index = next_index;
+            continue;
+        }
+
+        if character == '=' {
+            index = skip_whitespace(text, next_index);
+            if index != text.len() {
+                return None;
+            }
+            tokens.push(PasteToken::Equals);
+            break;
+        }
+
+        let operator = operator_from_expression_char(character)?;
+        tokens.push(PasteToken::Operator(operator));
+        index = next_index;
+        expecting_number = true;
+    }
+
+    if expecting_number || !tokens.iter().any(is_expression_token) {
+        return None;
+    }
+
+    Some(tokens)
+}
+
+fn parse_expression_number(
+    text: &str,
+    start_index: usize,
+    is_first_token: bool,
+) -> Option<(String, usize)> {
+    let mut index = start_index;
+    let mut has_number_character = false;
+
+    if let Some((sign, next_index)) = next_char(text, index)
+        && (sign == '-' || sign == '+')
+    {
+        if sign == '+' && !is_first_token {
+            return None;
+        }
+        index = next_index;
+    }
+
+    while let Some((character, next_index)) = next_char(text, index) {
+        if character.is_ascii_digit() || character == ',' || character == '.' {
+            has_number_character = true;
+            index = next_index;
+        } else {
+            break;
+        }
+    }
+
+    if !has_number_character {
+        return None;
+    }
+
+    let value = parse_pasted_number(&text[start_index..index], pasted_number_options())?;
+    Some((value, index))
+}
+
+fn is_expression_token(token: &PasteToken) -> bool {
+    !matches!(token, PasteToken::Number(_))
+}
+
+fn skip_whitespace(text: &str, mut index: usize) -> usize {
+    while let Some((character, next_index)) = next_char(text, index) {
+        if !character.is_whitespace() {
+            break;
+        }
+        index = next_index;
+    }
+    index
+}
+
+fn next_char(text: &str, index: usize) -> Option<(char, usize)> {
+    let character = text.get(index..)?.chars().next()?;
+    Some((character, index + character.len_utf8()))
+}
+
+fn operator_from_expression_char(character: char) -> Option<Operator> {
+    match character {
+        '+' => Some(Operator::Add),
+        '-' => Some(Operator::Subtract),
+        '*' | 'x' | 'X' | '\u{00d7}' => Some(Operator::Multiply),
+        '/' | '\u{00f7}' => Some(Operator::Divide),
+        _ => None,
     }
 }
 
@@ -516,8 +666,8 @@ mod tests {
     fn pastes_valid_number_and_rejects_invalid_text() {
         let mut calculator = Calculator::default();
 
-        assert_eq!(calculator.paste_number(" 12,345.67 ").display, "12,345.67");
-        assert_eq!(calculator.paste_number("15234B").display, "12,345.67");
+        assert_eq!(calculator.paste_input(" 12,345.67 ").display, "12,345.67");
+        assert_eq!(calculator.paste_input("15234B").display, "12,345.67");
     }
 
     #[test]
@@ -527,9 +677,56 @@ mod tests {
         calculator.press("1");
         calculator.press("2");
         calculator.press("+");
-        calculator.paste_number("3");
+        calculator.paste_input("3");
 
         assert_eq!(calculator.press("=").display, "15");
+    }
+
+    #[test]
+    fn pasted_expression_waits_for_equals_when_not_included() {
+        let mut calculator = Calculator::default();
+
+        let snapshot = calculator.paste_input("123 + 523");
+
+        assert_eq!(snapshot.display, "523");
+        assert_eq!(snapshot.equation, "123 +");
+        assert_eq!(calculator.press("=").display, "646");
+    }
+
+    #[test]
+    fn pasted_expression_with_equals_calculates_and_records_history() {
+        let mut calculator = Calculator::default();
+
+        let snapshot = calculator.paste_input("2 + 3 x 4=");
+
+        assert_eq!(snapshot.display, "20");
+        assert_eq!(snapshot.equation, "5 x 4 =");
+        assert_eq!(snapshot.history[0].equation, "5 x 4 =");
+        assert_eq!(snapshot.history[0].result, "20");
+    }
+
+    #[test]
+    fn pasted_expression_accepts_spaces_unicode_operators_and_percent() {
+        let mut calculator = Calculator::default();
+
+        assert_eq!(calculator.paste_input(" 50% ").display, "0.5");
+        assert_eq!(calculator.paste_input("1,200 \u{00f7} 3=").display, "400");
+        assert_eq!(calculator.paste_input("100 + 5%=").display, "100.05");
+    }
+
+    #[test]
+    fn pasted_expression_rejects_malformed_input_as_a_whole() {
+        let mut calculator = Calculator::default();
+
+        calculator.paste_input("9");
+
+        for expression in ["1++2", "%5", "5%%", "5%2", "12kg+3", "12 +"] {
+            assert_eq!(
+                calculator.paste_input(expression).display,
+                "9",
+                "{expression}"
+            );
+        }
     }
 
     #[test]

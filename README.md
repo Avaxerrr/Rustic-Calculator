@@ -6,7 +6,7 @@ A Rust desktop calculator and unit converter built with Slint.
 
 ## Features
 
-- Standard calculator with keyboard input and history.
+- Standard calculator with keyboard input, history, and Ctrl+V paste for numbers or operations.
 - Unit converters for volume, length, weight and mass, temperature, energy, area, speed, time, power, data, pressure, and angle.
 - Dark Windows-style desktop UI.
 - Persistent window size and position.

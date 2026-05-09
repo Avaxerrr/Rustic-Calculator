@@ -67,7 +67,7 @@ pub fn run(ui: MainWindow) -> Result<(), slint::PlatformError> {
             if let Some(ui) = ui_handle.upgrade() {
                 match ui.get_active_view().as_str() {
                     "calculator" => {
-                        let snapshot = calculator.borrow_mut().paste_number(&text);
+                        let snapshot = calculator.borrow_mut().paste_input(&text);
                         update_calculator_ui(&ui, snapshot);
                     }
                     "converter" => {
