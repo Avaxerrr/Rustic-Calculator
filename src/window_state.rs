@@ -17,6 +17,7 @@ const MIN_WIDTH: f32 = 360.0;
 const MIN_HEIGHT: f32 = 560.0;
 const MAX_WIDTH: f32 = 900.0;
 const MAX_HEIGHT: f32 = 1000.0;
+const HISTORY_MIN_WIDTH: f32 = 260.0;
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 struct WindowState {
@@ -24,6 +25,17 @@ struct WindowState {
     y: i32,
     width: f32,
     height: f32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    history_open: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    calculator_panel_width: Option<f32>,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct RestoredLayout {
+    size: LogicalSize,
+    history_open: bool,
+    calculator_panel_width: f32,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -39,9 +51,11 @@ pub fn restore_or_center(ui: &MainWindow) {
     let scale_factor = window.scale_factor();
 
     if let Some(state) = load_state() {
-        let size = logical_size(state.width, state.height);
-        let physical_size = PhysicalSize::from_logical(size, scale_factor);
-        window.set_size(size);
+        let layout = restored_layout(state);
+        let physical_size = PhysicalSize::from_logical(layout.size, scale_factor);
+        ui.set_calculator_panel_width(layout.calculator_panel_width);
+        ui.set_history_open(layout.history_open);
+        window.set_size(layout.size);
         window.set_position(clamp_position(
             PhysicalPosition::new(state.x, state.y),
             physical_size,
@@ -50,6 +64,8 @@ pub fn restore_or_center(ui: &MainWindow) {
     }
 
     let size = LogicalSize::new(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+    ui.set_calculator_panel_width(DEFAULT_WIDTH);
+    ui.set_history_open(false);
     window.set_size(size);
     window.set_position(center_position(PhysicalSize::from_logical(
         size,
@@ -73,6 +89,7 @@ pub fn autosave_timer(ui: &MainWindow) -> Timer {
 
     timer
 }
+
 pub fn save_on_close(ui: &MainWindow) {
     let ui_handle = ui.as_weak();
 
@@ -85,6 +102,7 @@ pub fn save_on_close(ui: &MainWindow) {
         CloseRequestResponse::HideWindow
     });
 }
+
 pub fn save(ui: &MainWindow) {
     let window = ui.window();
 
@@ -94,11 +112,17 @@ pub fn save(ui: &MainWindow) {
 
     let position = window.position();
     let size = window.size().to_logical(window.scale_factor());
+    let width = size.width.clamp(MIN_WIDTH, MAX_WIDTH);
+    let height = size.height.clamp(MIN_HEIGHT, MAX_HEIGHT);
+    let history_open = ui.get_history_open();
+    let calculator_panel_width = calculator_panel_width_for_save(ui, width, history_open);
     let state = WindowState {
         x: position.x,
         y: position.y,
-        width: size.width.clamp(MIN_WIDTH, MAX_WIDTH),
-        height: size.height.clamp(MIN_HEIGHT, MAX_HEIGHT),
+        width,
+        height,
+        history_open: Some(history_open),
+        calculator_panel_width: Some(calculator_panel_width),
     };
 
     let Some(path) = state_file_path() else {
@@ -126,6 +150,49 @@ fn state_file_path() -> Option<PathBuf> {
         .or_else(|| std::env::current_dir().ok())?;
 
     Some(base.join(APP_DIR_NAME).join(STATE_FILE_NAME))
+}
+
+fn restored_layout(state: WindowState) -> RestoredLayout {
+    let mut size = logical_size(state.width, state.height);
+    let history_open = state.history_open.unwrap_or(false);
+    let calculator_panel_width = if history_open {
+        let requested_width = state.calculator_panel_width.unwrap_or(DEFAULT_WIDTH);
+        let panel_width = clamp_calculator_panel_width(requested_width, size.width, true);
+        let minimum_open_width = (panel_width + HISTORY_MIN_WIDTH).clamp(MIN_WIDTH, MAX_WIDTH);
+
+        if size.width < minimum_open_width {
+            size.width = minimum_open_width;
+        }
+
+        panel_width
+    } else {
+        size.width
+    };
+
+    RestoredLayout {
+        size,
+        history_open,
+        calculator_panel_width,
+    }
+}
+
+fn calculator_panel_width_for_save(ui: &MainWindow, window_width: f32, history_open: bool) -> f32 {
+    let width = if history_open {
+        ui.get_calculator_panel_width()
+    } else {
+        window_width
+    };
+
+    clamp_calculator_panel_width(width, window_width, history_open)
+}
+
+fn clamp_calculator_panel_width(width: f32, window_width: f32, history_open: bool) -> f32 {
+    if history_open {
+        let max_panel_width = (window_width - HISTORY_MIN_WIDTH).clamp(MIN_WIDTH, MAX_WIDTH);
+        width.clamp(MIN_WIDTH, max_panel_width)
+    } else {
+        width.clamp(MIN_WIDTH, MAX_WIDTH)
+    }
 }
 
 fn logical_size(width: f32, height: f32) -> LogicalSize {
@@ -186,5 +253,53 @@ mod tests {
 
         assert_eq!(size.width, MIN_WIDTH);
         assert_eq!(size.height, MAX_HEIGHT);
+    }
+
+    #[test]
+    fn restores_legacy_state_as_closed_calculator() {
+        let layout = restored_layout(WindowState {
+            x: 0,
+            y: 0,
+            width: 720.0,
+            height: 700.0,
+            history_open: None,
+            calculator_panel_width: None,
+        });
+
+        assert!(!layout.history_open);
+        assert_eq!(layout.size.width, 720.0);
+        assert_eq!(layout.calculator_panel_width, 720.0);
+    }
+
+    #[test]
+    fn restores_open_history_with_calculator_width() {
+        let layout = restored_layout(WindowState {
+            x: 0,
+            y: 0,
+            width: 660.0,
+            height: 700.0,
+            history_open: Some(true),
+            calculator_panel_width: Some(400.0),
+        });
+
+        assert!(layout.history_open);
+        assert_eq!(layout.size.width, 660.0);
+        assert_eq!(layout.calculator_panel_width, 400.0);
+    }
+
+    #[test]
+    fn expands_too_small_open_history_state() {
+        let layout = restored_layout(WindowState {
+            x: 0,
+            y: 0,
+            width: 420.0,
+            height: 700.0,
+            history_open: Some(true),
+            calculator_panel_width: Some(400.0),
+        });
+
+        assert!(layout.history_open);
+        assert_eq!(layout.size.width, 620.0);
+        assert_eq!(layout.calculator_panel_width, MIN_WIDTH);
     }
 }

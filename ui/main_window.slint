@@ -53,14 +53,14 @@ export component MainWindow inherits Window {
     property <length> min-window-height: 560px;
     property <length> max-window-width: 900px;
     property <length> max-window-height: 1000px;
-    property <length> expanded-min-width: 620px;
+    property <length> expanded-min-width: root.calculator-panel-width + root.history-min-width;
     in-out property <length> calculator-panel-width: root.default-width;
     property <length> history-min-width: 260px;
     property <length> history-max-width: 320px;
     property <length> window-width: root.width;
     property <length> window-height: root.height;
-    property <length> history-panel-width: root.history-open ? min(root.history-max-width, max(root.history-min-width, root.window-width - root.calculator-panel-width)) : 0px;
-    property <length> content-width: root.active-view == "calculator" && root.history-open ? root.window-width - root.history-panel-width : root.window-width;
+    property <length> history-panel-width: root.active-view == "calculator" && root.history-open ? max(0px, root.window-width - root.calculator-panel-width) : 0px;
+    property <length> content-width: root.active-view == "calculator" && root.history-open ? root.calculator-panel-width : root.window-width;
     property <length> margin: max(6px, min(12px, root.content-width / 48));
     property <length> display-margin: max(18px, min(28px, root.content-width / 18));
     property <length> toolbar-margin: max(16px, min(24px, root.content-width / 24));
@@ -73,20 +73,20 @@ export component MainWindow inherits Window {
     function toggle-history() {
         if root.history-open {
             root.calculator-panel-width = max(root.min-window-width, min(root.max-window-width, root.content-width));
-            root.history-open = false;
             root.width = root.calculator-panel-width;
+            root.history-open = false;
         } else {
             root.calculator-panel-width = max(root.min-window-width, min(root.window-width, root.max-window-width - root.history-min-width));
-            root.width = root.calculator-panel-width + root.history-min-width;
             root.history-open = true;
+            root.width = root.calculator-panel-width + root.history-min-width;
         }
     }
 
     function collapse-history() {
         if root.history-open {
             root.calculator-panel-width = max(root.min-window-width, min(root.max-window-width, root.content-width));
-            root.history-open = false;
             root.width = root.calculator-panel-width;
+            root.history-open = false;
         } else {
             root.history-open = false;
         }
