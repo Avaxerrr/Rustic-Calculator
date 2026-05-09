@@ -6,10 +6,10 @@ A Rust desktop calculator and unit converter built with Slint.
 
 ## Features
 
-- Standard calculator with keyboard input, history, and Ctrl+V paste for numbers or operations.
+- Standard calculator with keyboard input, calculation history, and Ctrl+V paste for numbers or full operations.
 - Unit converters for volume, length, weight and mass, temperature, energy, area, speed, time, power, data, pressure, and angle.
 - Dark Windows-style desktop UI.
-- Persistent window size and position.
+- Persistent window size, position, and expanded history layout.
 
 ## Run
 
@@ -34,6 +34,7 @@ target/release/rustic-calculator.exe
 A GitHub release is created automatically when a version tag is pushed:
 
 ```powershell
+git push origin master
 git tag v1.1.0
 git push origin v1.1.0
 ```

@@ -57,10 +57,10 @@ jobs:
           Windows x64 release build for Rustic Calculator.
 
           ### Highlights
-          - Standard calculator with keyboard input and calculation history.
+          - Standard calculator with keyboard input, calculation history, and Ctrl+V paste for numbers or full operations.
           - Unit converters for volume, length, weight and mass, temperature, energy, area, speed, time, power, data, pressure, and angle.
           - Dark Windows-style desktop UI.
-          - Persistent window size and position.
+          - Persistent window size, position, and expanded history layout.
 
           ### Download
           Download the rustic-calculator-$tag-windows-x64.zip package, extract it, and run rustic-calculator.exe.
