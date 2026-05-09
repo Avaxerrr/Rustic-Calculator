@@ -55,7 +55,6 @@ pub fn restore_or_center(ui: &MainWindow) {
         let physical_size = PhysicalSize::from_logical(layout.size, scale_factor);
         ui.set_calculator_panel_width(layout.calculator_panel_width);
         ui.set_history_open(layout.history_open);
-        ui.set_history_visible(layout.history_open);
         window.set_size(layout.size);
         window.set_position(clamp_position(
             PhysicalPosition::new(state.x, state.y),
@@ -67,7 +66,6 @@ pub fn restore_or_center(ui: &MainWindow) {
     let size = LogicalSize::new(DEFAULT_WIDTH, DEFAULT_HEIGHT);
     ui.set_calculator_panel_width(DEFAULT_WIDTH);
     ui.set_history_open(false);
-    ui.set_history_visible(false);
     window.set_size(size);
     window.set_position(center_position(PhysicalSize::from_logical(
         size,
