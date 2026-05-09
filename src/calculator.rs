@@ -40,6 +40,7 @@ pub struct Calculator {
     equation: String,
     accumulator: Option<f64>,
     pending_operator: Option<Operator>,
+    pending_pasted_expression: Option<String>,
     reset_display_on_next_digit: bool,
     has_error: bool,
     history: Vec<HistoryEntry>,
@@ -80,6 +81,10 @@ impl Calculator {
     }
 
     pub fn press(&mut self, label: &str) -> CalculatorSnapshot {
+        if label != "=" {
+            self.pending_pasted_expression = None;
+        }
+
         match label {
             "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" => self.input_digit(label),
             "." => self.input_decimal_point(),
@@ -109,16 +114,20 @@ impl Calculator {
             return self.snapshot();
         }
 
-        let Some(tokens) = parse_pasted_expression(text) else {
+        let Some(expression) = parse_pasted_expression(text) else {
             return self.snapshot();
         };
 
         self.clear();
-        for token in tokens {
+        self.pending_pasted_expression = Some(expression.equation.clone());
+        for token in expression.tokens {
             self.apply_paste_token(token);
             if self.has_error {
                 break;
             }
+        }
+        if !self.has_error && self.pending_pasted_expression.is_some() {
+            self.equation = expression.equation;
         }
         self.snapshot()
     }
@@ -143,6 +152,7 @@ impl Calculator {
         self.equation.clear();
         self.accumulator = None;
         self.pending_operator = None;
+        self.pending_pasted_expression = None;
         self.reset_display_on_next_digit = false;
         self.has_error = false;
     }
@@ -209,12 +219,19 @@ impl Calculator {
 
         let left = self.accumulator.unwrap_or_else(|| self.current_value());
         let right = self.current_value();
-        self.equation = format!(
+        let equation = format!(
             "{} {} {} =",
             format_display(&format_number(left)),
             operator.label(),
             format_display(&format_number(right))
         );
+        self.equation = if record_history {
+            self.pending_pasted_expression
+                .take()
+                .map_or(equation, |expression| format!("{expression} ="))
+        } else {
+            equation
+        };
 
         let Some(result) = apply_operator(left, right, operator) else {
             self.display = "Error".to_owned();
@@ -287,6 +304,11 @@ impl Calculator {
     }
 }
 
+struct PastedExpression {
+    tokens: Vec<PasteToken>,
+    equation: String,
+}
+
 #[derive(Clone, PartialEq, Eq)]
 enum PasteToken {
     Number(String),
@@ -302,7 +324,7 @@ fn pasted_number_options() -> PasteNumberOptions {
     }
 }
 
-fn parse_pasted_expression(text: &str) -> Option<Vec<PasteToken>> {
+fn parse_pasted_expression(text: &str) -> Option<PastedExpression> {
     if text.contains(['\r', '\n']) {
         return None;
     }
@@ -353,7 +375,43 @@ fn parse_pasted_expression(text: &str) -> Option<Vec<PasteToken>> {
         return None;
     }
 
-    Some(tokens)
+    let equation = pasted_expression_equation(&tokens)?;
+    Some(PastedExpression { tokens, equation })
+}
+
+fn pasted_expression_equation(tokens: &[PasteToken]) -> Option<String> {
+    let mut equation = String::new();
+
+    for token in tokens {
+        match token {
+            PasteToken::Number(value) => append_expression_number(&mut equation, value),
+            PasteToken::Operator(operator) => append_expression_operator(&mut equation, *operator)?,
+            PasteToken::Percent => equation.push('%'),
+            PasteToken::Equals => {}
+        }
+    }
+
+    Some(equation.trim().to_owned())
+}
+
+fn append_expression_number(equation: &mut String, value: &str) {
+    if !equation.is_empty() && !equation.ends_with(' ') {
+        equation.push(' ');
+    }
+    equation.push_str(&format_display(value));
+}
+
+fn append_expression_operator(equation: &mut String, operator: Operator) -> Option<()> {
+    if equation.trim().is_empty() {
+        return None;
+    }
+
+    if !equation.ends_with(' ') {
+        equation.push(' ');
+    }
+    equation.push_str(operator.label());
+    equation.push(' ');
+    Some(())
 }
 
 fn parse_expression_number(
@@ -689,8 +747,11 @@ mod tests {
         let snapshot = calculator.paste_input("123 + 523");
 
         assert_eq!(snapshot.display, "523");
-        assert_eq!(snapshot.equation, "123 +");
-        assert_eq!(calculator.press("=").display, "646");
+        assert_eq!(snapshot.equation, "123 + 523");
+        let snapshot = calculator.press("=");
+
+        assert_eq!(snapshot.display, "646");
+        assert_eq!(snapshot.history[0].equation, "123 + 523 =");
     }
 
     #[test]
@@ -700,8 +761,8 @@ mod tests {
         let snapshot = calculator.paste_input("2 + 3 x 4=");
 
         assert_eq!(snapshot.display, "20");
-        assert_eq!(snapshot.equation, "5 x 4 =");
-        assert_eq!(snapshot.history[0].equation, "5 x 4 =");
+        assert_eq!(snapshot.equation, "2 + 3 x 4 =");
+        assert_eq!(snapshot.history[0].equation, "2 + 3 x 4 =");
         assert_eq!(snapshot.history[0].result, "20");
     }
 
@@ -712,6 +773,18 @@ mod tests {
         assert_eq!(calculator.paste_input(" 50% ").display, "0.5");
         assert_eq!(calculator.paste_input("1,200 \u{00f7} 3=").display, "400");
         assert_eq!(calculator.paste_input("100 + 5%=").display, "100.05");
+    }
+
+    #[test]
+    fn pasted_multi_operation_history_preserves_full_expression() {
+        let mut calculator = Calculator::default();
+
+        let snapshot = calculator.paste_input("12 - 41 + 5 / 51=");
+
+        assert_eq!(snapshot.display, "-0.4705882353");
+        assert_eq!(snapshot.equation, "12 - 41 + 5 / 51 =");
+        assert_eq!(snapshot.history[0].equation, "12 - 41 + 5 / 51 =");
+        assert_eq!(snapshot.history[0].result, "-0.4705882353");
     }
 
     #[test]
